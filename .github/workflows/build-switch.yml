@@ -35,6 +35,30 @@ jobs:
         run: |
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/include/AL"
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -i openal
+      
+      - name: Build mpg123 for Switch
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --depth=1 https://github.com/libsdl-org/mpg123.git /tmp/mpg123
+          cmake -S /tmp/mpg123 -B /tmp/mpg123-build \
+            -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/switch-prefix" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DNETWORK=OFF \
+            -DINT123=OFF \
+            -DOUTPUT_MODULES=OFF \
+            -DNEWOLDWRITE=OFF
+          cmake --build /tmp/mpg123-build --parallel
+          cmake --install /tmp/mpg123-build
+
+
+      - name: Verify mpg123 staged
+        shell: bash
+        run: |
+          ls -la "${GITHUB_WORKSPACE}/switch-prefix/include" | grep -i mpg123
+          ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -Ei 'mpg123|out123|syn123'
                   
       - name: Generate shader includes
         run: |
@@ -43,7 +67,6 @@ jobs:
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
             -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix"
-            -DRE3_WITH_MPG123=False
           cmake --build build-host --target shaders --parallel
             
       - name: "Build files"
