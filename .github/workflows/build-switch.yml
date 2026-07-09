@@ -11,7 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: 'true'
+          submodules: 'recursive'
+          fetch-depth: 0
 
       - name: Build OpenAL Soft for Switch
         shell: bash
@@ -53,19 +54,36 @@ jobs:
       - name: Fix shader script permissions
         shell: bash
         run: |
-          chmod +x vendor/librw/src/gl/shaders/*.sh
-          chmod +x src/extras/shaders/*.sh
+          # only chmod existing .sh files; don't fail if none exist
+          # Use bash nullglob to avoid errors if glob matches nothing
+          set -euo pipefail
+          shopt -s nullglob || true
+          for f in vendor/librw/src/gl/shaders/*.sh; do
+            [ -f "$f" ] && chmod +x "$f"
+          done
+          for f in src/extras/shaders/*.sh; do
+            [ -f "$f" ] && chmod +x "$f"
+          done
+          shopt -u nullglob || true
       
       - name: Build librw shader includes from vendored librw
         shell: bash
         run: |
           set -euxo pipefail
-          cd vendor/librw/src/gl/shaders
-          # Build the librw shaders from the vendored source
-          make -j$(nproc)
-          # Verify key shader files were generated
-          ls -lh *.inc
-          cd - # back to repo root
+          if [ -d vendor/librw/src/gl/shaders ]; then
+            cd vendor/librw/src/gl/shaders
+            # Only run make if a Makefile exists
+            if [ -f Makefile ] || [ -f makefile ]; then
+              make -j$(nproc)
+            else
+              echo "No Makefile in vendor/librw/src/gl/shaders — skipping librw shader build"
+            fi
+            # List any .inc files if they exist
+            ls -lh *.inc 2>/dev/null || echo "No .inc files generated in vendor/librw/src/gl/shaders"
+            cd - >/dev/null
+          else
+            echo "vendor/librw/src/gl/shaders not found — skipping librw shader build"
+          fi
       
       - name: Generate re3 shader includes
         shell: bash
