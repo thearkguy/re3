@@ -57,12 +57,22 @@ if(${PROJECT}_AUDIO STREQUAL "OAL")
     find_package(OpenAL CONFIG QUIET)
     if(OpenAL_FOUND AND TARGET OpenAL::OpenAL)
         target_link_libraries(${EXECUTABLE} PRIVATE OpenAL::OpenAL)
+        # If your OpenAL package is static and uses SDL backend, also link SDL2
+        if(DEFINED SDL2_LIBRARY AND EXISTS "${SDL2_LIBRARY}")
+            target_link_libraries(${EXECUTABLE} PRIVATE "${SDL2_LIBRARY}")
+        endif()
 
     # 2) Cross-build/manual override path (e.g. Switch CI)
     elseif(DEFINED OPENAL_LIBRARY AND DEFINED OPENAL_INCLUDE_DIR
            AND EXISTS "${OPENAL_LIBRARY}" AND EXISTS "${OPENAL_INCLUDE_DIR}")
         target_include_directories(${EXECUTABLE} PRIVATE "${OPENAL_INCLUDE_DIR}")
+
+        # IMPORTANT: order matters for static libs: OpenAL first, SDL2 after
         target_link_libraries(${EXECUTABLE} PRIVATE "${OPENAL_LIBRARY}")
+        if(DEFINED SDL2_LIBRARY AND EXISTS "${SDL2_LIBRARY}")
+            target_link_libraries(${EXECUTABLE} PRIVATE "${SDL2_LIBRARY}")
+        endif()
+
         if(DEFINED OPENAL_DEFINITIONS AND NOT OPENAL_DEFINITIONS STREQUAL "")
             target_compile_definitions(${EXECUTABLE} PRIVATE ${OPENAL_DEFINITIONS})
         endif()
@@ -72,6 +82,10 @@ if(${PROJECT}_AUDIO STREQUAL "OAL")
         find_package(OpenAL MODULE REQUIRED)
         target_include_directories(${EXECUTABLE} PRIVATE ${OPENAL_INCLUDE_DIR})
         target_link_libraries(${EXECUTABLE} PRIVATE ${OPENAL_LIBRARY})
+        if(DEFINED SDL2_LIBRARY AND EXISTS "${SDL2_LIBRARY}")
+            target_link_libraries(${EXECUTABLE} PRIVATE "${SDL2_LIBRARY}")
+        endif()
+
         if(OPENAL_DEFINITIONS)
             target_compile_definitions(${EXECUTABLE} PRIVATE ${OPENAL_DEFINITIONS})
         endif()
@@ -79,7 +93,6 @@ if(${PROJECT}_AUDIO STREQUAL "OAL")
 
     target_compile_definitions(${EXECUTABLE} PRIVATE AUDIO_OAL)
 endif()
-
 find_package(mpg123 REQUIRED)
 target_link_libraries(${EXECUTABLE} PRIVATE
     MPG123::libmpg123
