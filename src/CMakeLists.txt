@@ -53,22 +53,27 @@ target_compile_definitions(${EXECUTABLE} PRIVATE CMAKE_BUILD)
 target_compile_definitions(${EXECUTABLE} PRIVATE USE_OUR_VERSIONING)
 
 if(${PROJECT}_AUDIO STREQUAL "OAL")
+    # 1) Prefer config package if available
     find_package(OpenAL CONFIG QUIET)
     if(OpenAL_FOUND AND TARGET OpenAL::OpenAL)
         target_link_libraries(${EXECUTABLE} PRIVATE OpenAL::OpenAL)
-    else()
-        # Accept manually provided OpenAL paths (e.g. cross builds like Switch CI)
-        if(DEFINED OPENAL_INCLUDE_DIR AND DEFINED OPENAL_LIBRARY
-           AND EXISTS "${OPENAL_LIBRARY}")
-            target_include_directories(${EXECUTABLE} PRIVATE "${OPENAL_INCLUDE_DIR}")
-            target_link_libraries(${EXECUTABLE} PRIVATE "${OPENAL_LIBRARY}")
-        else()
-            find_package(OpenAL MODULE REQUIRED)
-            target_include_directories(${EXECUTABLE} PRIVATE ${OPENAL_INCLUDE_DIR})
-            target_link_libraries(${EXECUTABLE} PRIVATE ${OPENAL_LIBRARY})
+
+    # 2) Cross-build/manual override path (e.g. Switch CI)
+    elseif(OPENAL_LIBRARY AND OPENAL_INCLUDE_DIR)
+        target_include_directories(${EXECUTABLE} PRIVATE "${OPENAL_INCLUDE_DIR}")
+        target_link_libraries(${EXECUTABLE} PRIVATE "${OPENAL_LIBRARY}")
+        if(OPENAL_DEFINITIONS)
             target_compile_definitions(${EXECUTABLE} PRIVATE ${OPENAL_DEFINITIONS})
         endif()
+
+    # 3) Fallback to module mode
+    else()
+        find_package(OpenAL MODULE REQUIRED)
+        target_include_directories(${EXECUTABLE} PRIVATE ${OPENAL_INCLUDE_DIR})
+        target_link_libraries(${EXECUTABLE} PRIVATE ${OPENAL_LIBRARY})
+        target_compile_definitions(${EXECUTABLE} PRIVATE ${OPENAL_DEFINITIONS})
     endif()
+
     target_compile_definitions(${EXECUTABLE} PRIVATE AUDIO_OAL)
 endif()
 
