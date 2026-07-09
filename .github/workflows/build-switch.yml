@@ -50,14 +50,14 @@ jobs:
           ls -la /opt/devkitpro/portlibs/switch/include | grep -i mpg123
           ls -la /opt/devkitpro/portlibs/switch/lib | grep -Ei 'mpg123|out123|syn123'
                   
-      - name: Generate shader includes
-        run: |
-          cmake -S . -B build-host \
-            -DRE3_AUDIO=OAL \
-            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
-            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
-            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch"
-          cmake --build build-host --target shaders --parallel
+#      - name: Generate shader includes
+#        run: |
+#          cmake -S . -B build-host \
+#            -DRE3_AUDIO=OAL \
+#            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
+#            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
+#            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch"
+#          cmake --build build-host --target shaders --parallel
             
       - name: "Build files"
         run: |
