@@ -136,6 +136,7 @@ jobs:
             -DLIBRW_GL3_GFXLIB=GLFW \
             -DRE3_WITH_OPUS=False \
             -DRE3_VENDORED_LIBRW=True \
+            -DRE3_INSTALL=ON \
             -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch" \
             -DCMAKE_FIND_ROOT_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch;/opt/devkitpro/libnx" \
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
