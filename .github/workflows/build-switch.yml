@@ -49,17 +49,28 @@ jobs:
         run: |
           ls -la /opt/devkitpro/portlibs/switch/include | grep -i mpg123
           ls -la /opt/devkitpro/portlibs/switch/lib | grep -Ei 'mpg123|out123|syn123'
-                  
-      - name: Prepare shader includes path
+      
+      - name: Build librw shader includes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd vendor/librw/src/gl/shaders
+          # Build the standard librw shaders from source
+          make -j$(nproc)
+          # Verify key shader files were generated
+          ls -lh header_vs.inc header_fs.inc im2d_gl.inc default_vs_gl.inc
+          cd - # back to repo root
+      
+      - name: Prepare shader includes path for re3
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p shaders/obj
-          cp -f vendor/librw/src/gl/shaders/obj/*.inc shaders/obj/
-          test -f shaders/obj/im2d_vert.inc
-          test -f shaders/obj/neoVehicle_frag.inc
-          test -f shaders/obj/im2d_UV2_vert.inc
-            
+          # Copy generated librw shaders
+          cp -f vendor/librw/src/gl/shaders/*.inc shaders/obj/
+          # The .inc files should now exist
+          ls -lh shaders/obj/*.inc | head -5
+          
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
