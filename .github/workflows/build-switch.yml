@@ -35,11 +35,14 @@ jobs:
         run: |
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/include/AL"
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -i openal
-            
+                  
       - name: Generate shader includes
         run: |
-          cmake -S . -B build-host
-          cmake --build build-host --target shaders
+          cmake -S . -B build-host \
+            -DRE3_AUDIO=NONE \
+            -DRE3_WITH_OPUS=False \
+            -DRE3_WITH_LIBSNDFILE=False
+          cmake --build build-host --target shaders --parallel
             
       - name: "Build files"
         run: |
