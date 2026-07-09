@@ -40,7 +40,7 @@ jobs:
         run: |
           cmake -S . -B build-host
           cmake --build build-host --target shaders
-      
+            
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
@@ -51,7 +51,10 @@ jobs:
             -DLIBRW_GL3_GFXLIB=GLFW \
             -DRE3_WITH_OPUS=False \
             -DRE3_VENDORED_LIBRW=True \
-            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix"
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix" \
+            -DCMAKE_FIND_ROOT_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch;/opt/devkitpro/libnx" \
+            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
+            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
           cmake --build build-switch --parallel
       
       - name: "Create binary package (cpack)"
