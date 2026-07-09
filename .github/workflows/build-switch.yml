@@ -43,6 +43,7 @@ jobs:
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
             -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix"
+            -DRE3_WITH_MPG123=False
           cmake --build build-host --target shaders --parallel
             
       - name: "Build files"
