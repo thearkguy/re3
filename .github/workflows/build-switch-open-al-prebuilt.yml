@@ -1,0 +1,184 @@
+name: re3 cmake devkitA64 (Nintendo Switch)
+on:
+  pull_request:
+  push:
+  release:
+    types: published
+jobs:
+  build-nintendo-switch:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Install or Build OpenAL Soft for Switch
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          # Try installing OpenAL from devkitPro portlibs via dkp-pacman.
+          # Prefer package names 'switch-openal' or 'switch-openal-soft' (try both).
+          echo "Attempting dkp-pacman install of OpenAL..."
+          if dkp-pacman -Syu --noconfirm switch-openal || dkp-pacman -Syu --noconfirm switch-openal-soft; then
+            echo "dkp-pacman reported success. Staging headers/libs into switch-prefix if present."
+            mkdir -p "${GITHUB_WORKSPACE}/switch-prefix/include/AL" "${GITHUB_WORKSPACE}/switch-prefix/lib"
+
+            # Copy static lib or dynamic lib from portlibs if available
+            if [ -f /opt/devkitpro/portlibs/switch/lib/libopenal.a ]; then
+              cp /opt/devkitpro/portlibs/switch/lib/libopenal.a "${GITHUB_WORKSPACE}/switch-prefix/lib/"
+            else
+              # copy any matching openal artifacts
+              shopt -s nullglob || true
+              for f in /opt/devkitpro/portlibs/switch/lib/*openal*; do
+                [ -f "$f" ] && cp "$f" "${GITHUB_WORKSPACE}/switch-prefix/lib/" || true
+              done
+              shopt -u nullglob || true
+            fi
+
+            # Copy headers if present
+            if [ -d /opt/devkitpro/portlibs/switch/include/AL ]; then
+              cp -r /opt/devkitpro/portlibs/switch/include/AL "${GITHUB_WORKSPACE}/switch-prefix/include/"
+            fi
+
+          else
+            echo "dkp-pacman install failed or packages not available; building OpenAL from source as fallback"
+            git clone --depth=1 https://github.com/kcat/openal-soft.git /tmp/openal-soft
+            cmake -S /tmp/openal-soft -B /tmp/openal-build \
+              -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/switch-prefix" \
+              -DLIBTYPE=STATIC \
+              -DALSOFT_EXAMPLES=OFF \
+              -DALSOFT_TESTS=OFF \
+              -DALSOFT_UTILS=OFF \
+              -DALSOFT_NO_CONFIG_UTIL=ON
+            cmake --build /tmp/openal-build --parallel
+            cmake --install /tmp/openal-build
+          fi
+
+      - name: Verify OpenAL staged
+        shell: bash
+        run: |
+          ls -la "${GITHUB_WORKSPACE}/switch-prefix/include/AL" || echo "No OpenAL headers staged"
+          ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -i openal || echo "No libopenal found in switch-prefix/lib"
+
+      - name: Install switch mpg123 via dkp-pacman
+        shell: bash
+        run: |
+          set -euxo pipefail
+          dkp-pacman -Syu --noconfirm switch-mpg123
+          test -f /opt/devkitpro/portlibs/switch/lib/libmpg123.a
+          test -f /opt/devkitpro/portlibs/switch/include/mpg123.h
+
+      - name: Verify mpg123 from portlibs
+        shell: bash
+        run: |
+          ls -la /opt/devkitpro/portlibs/switch/include | grep -i mpg123
+          ls -la /opt/devkitpro/portlibs/switch/lib | grep -Ei 'mpg123|out123|syn123'
+
+      - name: Fix shader script permissions
+        shell: bash
+        run: |
+          # only chmod existing .sh files; don't fail if none exist
+          # Use bash nullglob to avoid errors if glob matches nothing
+          set -euo pipefail
+          shopt -s nullglob || true
+          # Explicitly chmod the critical makeinc_glsl.sh scripts
+          chmod +x shaders/makeinc_glsl.sh shaders/make_glsl.sh 2>/dev/null || true
+          chmod +x src/extras/shaders/makeinc_glsl.sh src/extras/shaders/make_glsl.sh 2>/dev/null || true
+          for f in vendor/librw/src/gl/shaders/*.sh; do
+            [ -f "$f" ] && chmod +x "$f"
+          done
+          shopt -u nullglob || true
+
+      - name: Build librw shader includes from vendored librw
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if [ -d vendor/librw/src/gl/shaders ]; then
+            cd vendor/librw/src/gl/shaders
+            # Only run make if a Makefile exists
+            if [ -f Makefile ] || [ -f makefile ]; then
+              make -j$(nproc)
+            else
+              echo "No Makefile in vendor/librw/src/gl/shaders — skipping librw shader build"
+            fi
+            # List any .inc files if they exist
+            ls -lh *.inc 2>/dev/null || echo "No .inc files generated in vendor/librw/src/gl/shaders"
+            cd - >/dev/null
+          else
+            echo "vendor/librw/src/gl/shaders not found — skipping librw shader build"
+          fi
+
+      - name: Generate re3 shader includes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p shaders/obj
+          mkdir -p src/extras/shaders/obj  # ADD THIS LINE
+
+          # Ensure all shader scripts are executable before running them
+          chmod +x shaders/*.sh 2>/dev/null || true
+          chmod +x src/extras/shaders/*.sh 2>/dev/null || true
+
+          # Copy all generated librw shaders
+          if ls vendor/librw/src/gl/shaders/*.inc 1> /dev/null 2>&1; then
+            cp -f vendor/librw/src/gl/shaders/*.inc shaders/obj/
+          fi
+
+          # Build re3-specific shaders
+          if [ -f "shaders/Makefile" ]; then
+            cd shaders
+            make -j$(nproc)
+            cd ..
+          fi
+
+          # Verify all required shader files exist
+          required_shaders=(
+            "shaders/obj/neoVehicle_frag.inc"
+            "shaders/obj/im2d_vert.inc"
+            "shaders/obj/im2d_UV2_vert.inc"
+          )
+
+          for shader in "${required_shaders[@]}"; do
+            if [ ! -f "$shader" ]; then
+              echo "ERROR: Missing required shader: $shader"
+              ls -lh shaders/obj/*.inc 2>/dev/null || echo "No .inc files found"
+              exit 1
+            fi
+          done
+
+          echo "All required shaders generated successfully:"
+          ls -lh shaders/obj/*.inc
+
+      - name: "Build files"
+        run: |
+          /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
+            -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DRE3_AUDIO=OAL \
+            -DLIBRW_PLATFORM=GL3 \
+            -DLIBRW_GL3_GFXLIB=GLFW \
+            -DRE3_WITH_OPUS=False \
+            -DRE3_VENDORED_LIBRW=True \
+            -DRE3_INSTALL=ON \
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch" \
+            -DCMAKE_FIND_ROOT_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch;/opt/devkitpro/libnx" \
+            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
+            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
+          cmake --build build-switch --parallel
+
+      - name: "Create binary package (cpack)"
+        working-directory: ./build-switch
+        run: |
+          cpack -G ZIP
+
+      - name: "Archive binary package (github artifacts)"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "switch-gl3"
+          path: build-switch/*.zip
+          if-no-files-found: error
