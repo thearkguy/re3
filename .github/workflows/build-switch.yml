@@ -90,6 +90,7 @@ jobs:
         run: |
           set -euxo pipefail
           mkdir -p shaders/obj
+          mkdir -p src/extras/shaders/obj  # ADD THIS LINE
           
           # Ensure all shader scripts are executable before running them
           chmod +x shaders/*.sh 2>/dev/null || true
@@ -103,7 +104,6 @@ jobs:
           # Build re3-specific shaders
           if [ -f "shaders/Makefile" ]; then
             cd shaders
-            mkdir -p obj
             make -j$(nproc)
             cd ..
           fi
@@ -125,7 +125,7 @@ jobs:
           
           echo "All required shaders generated successfully:"
           ls -lh shaders/obj/*.inc
-          
+      
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
