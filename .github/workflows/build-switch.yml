@@ -58,10 +58,10 @@ jobs:
           # Use bash nullglob to avoid errors if glob matches nothing
           set -euo pipefail
           shopt -s nullglob || true
+          # Explicitly chmod the critical makeinc_glsl.sh scripts
+          chmod +x shaders/makeinc_glsl.sh shaders/make_glsl.sh 2>/dev/null || true
+          chmod +x src/extras/shaders/makeinc_glsl.sh src/extras/shaders/make_glsl.sh 2>/dev/null || true
           for f in vendor/librw/src/gl/shaders/*.sh; do
-            [ -f "$f" ] && chmod +x "$f"
-          done
-          for f in src/extras/shaders/*.sh; do
             [ -f "$f" ] && chmod +x "$f"
           done
           shopt -u nullglob || true
@@ -91,7 +91,8 @@ jobs:
           set -euxo pipefail
           mkdir -p shaders/obj
           
-          # Ensure all shader scripts are executable
+          # Ensure all shader scripts are executable before running them
+          chmod +x shaders/*.sh 2>/dev/null || true
           chmod +x src/extras/shaders/*.sh 2>/dev/null || true
           
           # Copy all generated librw shaders
