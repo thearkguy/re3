@@ -58,6 +58,21 @@ jobs:
 #            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
 #            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch"
 #          cmake --build build-host --target shaders --parallel
+
+      - name: Prepare shader includes path
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p shaders
+          if [ -d vendor/librw/src/gl/shaders/obj ]; then
+            ln -sfn ../vendor/librw/src/gl/shaders/obj shaders/obj
+          else
+            echo "Expected shader source dir vendor/librw/src/gl/shaders/obj not found"
+            exit 1
+          fi
+          test -f shaders/obj/im2d_vert.inc
+          test -f shaders/obj/neoVehicle_frag.inc
+          test -f shaders/obj/im2d_UV2_vert.inc
             
       - name: "Build files"
         run: |
