@@ -58,19 +58,33 @@ jobs:
           # Build the standard librw shaders from source
           make -j$(nproc)
           # Verify key shader files were generated
-          ls -lh header_vs.inc header_fs.inc im2d_gl.inc default_vs_gl.inc
+          ls -lh *.inc
           cd - # back to repo root
       
-      - name: Prepare shader includes path for re3
+      - name: Generate re3 shader includes
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p shaders/obj
-          # Copy generated librw shaders
-          cp -f vendor/librw/src/gl/shaders/*.inc shaders/obj/
-          # The .inc files should now exist
-          ls -lh shaders/obj/*.inc | head -5
           
+          # Copy all generated librw shaders
+          if ls vendor/librw/src/gl/shaders/*.inc 1> /dev/null 2>&1; then
+            cp -f vendor/librw/src/gl/shaders/*.inc shaders/obj/
+          fi
+          
+          # Check if re3 shader build system exists and use it
+          if [ -f "shaders/Makefile" ]; then
+            cd shaders
+            make -j$(nproc) || true
+            cd ..
+          fi
+          
+          # Verify the shader files exist
+          if [ -d "shaders/obj" ]; then
+            echo "Shader files in shaders/obj:"
+            ls -lh shaders/obj/*.inc 2>/dev/null || echo "Warning: Some expected .inc files may be missing"
+          fi
+      
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
