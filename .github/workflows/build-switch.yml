@@ -53,7 +53,7 @@ jobs:
             -DRE3_VENDORED_LIBRW=True \
             -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix" \
             -DCMAKE_FIND_ROOT_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch;/opt/devkitpro/libnx" \
-            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
+            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
           cmake --build build-switch --parallel
       
