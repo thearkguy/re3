@@ -176,7 +176,9 @@ jobs:
             -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch" \
             -DCMAKE_FIND_ROOT_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch;/opt/devkitpro/libnx" \
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
-            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
+            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
+            -DSDL2_LIBRARY=/opt/devkitpro/portlibs/switch/lib/libSDL2.a \
+            -DSDL2_INCLUDE_DIR=/opt/devkitpro/portlibs/switch/include/SDL2
           cmake --build build-switch --parallel
 
       - name: "Create binary package (cpack)"
