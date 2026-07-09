@@ -35,7 +35,7 @@ jobs:
         run: |
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/include/AL"
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -i openal
-      
+       
       - name: Install switch mpg123 via dkp-pacman
         shell: bash
         run: |
@@ -50,12 +50,12 @@ jobs:
           ls -la /opt/devkitpro/portlibs/switch/include | grep -i mpg123
           ls -la /opt/devkitpro/portlibs/switch/lib | grep -Ei 'mpg123|out123|syn123'
       
-      - name: Build librw shader includes
+      - name: Build librw shader includes from vendored librw
         shell: bash
         run: |
           set -euxo pipefail
           cd vendor/librw/src/gl/shaders
-          # Build the standard librw shaders from source
+          # Build the librw shaders from the vendored source
           make -j$(nproc)
           # Verify key shader files were generated
           ls -lh *.inc
@@ -96,7 +96,7 @@ jobs:
           
           echo "All required shaders generated successfully:"
           ls -lh shaders/obj/*.inc
-       
+        
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
@@ -112,12 +112,12 @@ jobs:
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
           cmake --build build-switch --parallel
-       
+        
       - name: "Create binary package (cpack)"
         working-directory: ./build-switch
         run: |
           cpack
-       
+        
       - name: "Archive binary package (github artifacts)"
         uses: actions/upload-artifact@v4
         with:
