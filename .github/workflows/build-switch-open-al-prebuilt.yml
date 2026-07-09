@@ -59,6 +59,14 @@ jobs:
             cmake --install /tmp/openal-build
           fi
 
+      - name: Install SDL2 for Switch
+        shell: bash
+        run: |
+          set -euxo pipefail
+          dkp-pacman -Syu --noconfirm switch-sdl2
+          test -f /opt/devkitpro/portlibs/switch/lib/libSDL2.a
+          test -d /opt/devkitpro/portlibs/switch/include/SDL2
+
       - name: Verify OpenAL staged
         shell: bash
         run: |
