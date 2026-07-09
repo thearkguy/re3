@@ -36,50 +36,19 @@ jobs:
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/include/AL"
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -i openal
       
-      - name: Build mpg123 for Switch
+      - name: Install switch mpg123 via dkp-pacman
         shell: bash
         run: |
           set -euxo pipefail
-      
-          git clone --depth=1 https://github.com/libsdl-org/mpg123.git /tmp/mpg123
-          cd /tmp/mpg123
-      
-          # Generate configure script if needed
-          if [ ! -f ./configure ]; then
-            ./autogen.sh
-          fi
-      
-          export DEVKITPRO=/opt/devkitpro
-          export DEVKITA64=/opt/devkitpro/devkitA64
-          export PATH="$DEVKITA64/bin:$PATH"
-      
-          export CC=aarch64-none-elf-gcc
-          export CXX=aarch64-none-elf-g++
-          export AR=aarch64-none-elf-ar
-          export RANLIB=aarch64-none-elf-ranlib
-          export LD=aarch64-none-elf-ld
-          export STRIP=aarch64-none-elf-strip
-      
-          ./configure \
-            --host=aarch64-none-elf \
-            --prefix="${GITHUB_WORKSPACE}/switch-prefix" \
-            --disable-shared \
-            --enable-static \
-            --with-cpu=generic \
-            --disable-network \
-            --disable-debug \
-            --disable-ipv6 \
-            --disable-modules
-      
-          make -j"$(nproc)"
-          make install
+          dkp-pacman -Syu --noconfirm switch-mpg123
+          test -f /opt/devkitpro/portlibs/switch/lib/libmpg123.a
+          test -f /opt/devkitpro/portlibs/switch/include/mpg123.h
 
-
-      - name: Verify mpg123 staged
+      - name: Verify mpg123 from portlibs
         shell: bash
         run: |
-          ls -la "${GITHUB_WORKSPACE}/switch-prefix/include" | grep -i mpg123
-          ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -Ei 'mpg123|out123|syn123'
+          ls -la /opt/devkitpro/portlibs/switch/include | grep -i mpg123
+          ls -la /opt/devkitpro/portlibs/switch/lib | grep -Ei 'mpg123|out123|syn123'
                   
       - name: Generate shader includes
         run: |
@@ -87,7 +56,7 @@ jobs:
             -DRE3_AUDIO=OAL \
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
-            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix"
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch"
           cmake --build build-host --target shaders --parallel
             
       - name: "Build files"
@@ -100,7 +69,7 @@ jobs:
             -DLIBRW_GL3_GFXLIB=GLFW \
             -DRE3_WITH_OPUS=False \
             -DRE3_VENDORED_LIBRW=True \
-            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix" \
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch" \
             -DCMAKE_FIND_ROOT_PATH="${GITHUB_WORKSPACE}/switch-prefix;/opt/devkitpro/portlibs/switch;/opt/devkitpro/libnx" \
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
