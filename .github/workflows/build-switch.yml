@@ -40,18 +40,39 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+      
           git clone --depth=1 https://github.com/libsdl-org/mpg123.git /tmp/mpg123
-          cmake -S /tmp/mpg123 -B /tmp/mpg123-build \
-            -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/switch-prefix" \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DNETWORK=OFF \
-            -DINT123=OFF \
-            -DOUTPUT_MODULES=OFF \
-            -DNEWOLDWRITE=OFF
-          cmake --build /tmp/mpg123-build --parallel
-          cmake --install /tmp/mpg123-build
+          cd /tmp/mpg123
+      
+          # Generate configure script if needed
+          if [ ! -f ./configure ]; then
+            ./autogen.sh
+          fi
+      
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITA64=/opt/devkitpro/devkitA64
+          export PATH="$DEVKITA64/bin:$PATH"
+      
+          export CC=aarch64-none-elf-gcc
+          export CXX=aarch64-none-elf-g++
+          export AR=aarch64-none-elf-ar
+          export RANLIB=aarch64-none-elf-ranlib
+          export LD=aarch64-none-elf-ld
+          export STRIP=aarch64-none-elf-strip
+      
+          ./configure \
+            --host=aarch64-none-elf \
+            --prefix="${GITHUB_WORKSPACE}/switch-prefix" \
+            --disable-shared \
+            --enable-static \
+            --with-cpu=generic \
+            --disable-network \
+            --disable-debug \
+            --disable-ipv6 \
+            --disable-modules
+      
+          make -j"$(nproc)"
+          make install
 
 
       - name: Verify mpg123 staged
