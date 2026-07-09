@@ -50,6 +50,12 @@ jobs:
           ls -la /opt/devkitpro/portlibs/switch/include | grep -i mpg123
           ls -la /opt/devkitpro/portlibs/switch/lib | grep -Ei 'mpg123|out123|syn123'
       
+      - name: Fix shader script permissions
+        shell: bash
+        run: |
+          chmod +x vendor/librw/src/gl/shaders/*.sh
+          chmod +x src/extras/shaders/*.sh
+      
       - name: Build librw shader includes from vendored librw
         shell: bash
         run: |
