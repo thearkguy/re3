@@ -72,19 +72,31 @@ jobs:
             cp -f vendor/librw/src/gl/shaders/*.inc shaders/obj/
           fi
           
-          # Check if re3 shader build system exists and use it
+          # Build re3-specific shaders
           if [ -f "shaders/Makefile" ]; then
             cd shaders
-            make -j$(nproc) || true
+            make -j$(nproc)
             cd ..
           fi
           
-          # Verify the shader files exist
-          if [ -d "shaders/obj" ]; then
-            echo "Shader files in shaders/obj:"
-            ls -lh shaders/obj/*.inc 2>/dev/null || echo "Warning: Some expected .inc files may be missing"
-          fi
-      
+          # Verify all required shader files exist
+          required_shaders=(
+            "shaders/obj/neoVehicle_frag.inc"
+            "shaders/obj/im2d_vert.inc"
+            "shaders/obj/im2d_UV2_vert.inc"
+          )
+          
+          for shader in "${required_shaders[@]}"; do
+            if [ ! -f "$shader" ]; then
+              echo "ERROR: Missing required shader: $shader"
+              ls -lh shaders/obj/*.inc 2>/dev/null || echo "No .inc files found"
+              exit 1
+            fi
+          done
+          
+          echo "All required shaders generated successfully:"
+          ls -lh shaders/obj/*.inc
+       
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
@@ -100,12 +112,12 @@ jobs:
             -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include/AL" \
             -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
           cmake --build build-switch --parallel
-      
+       
       - name: "Create binary package (cpack)"
         working-directory: ./build-switch
         run: |
           cpack
-      
+       
       - name: "Archive binary package (github artifacts)"
         uses: actions/upload-artifact@v4
         with:
