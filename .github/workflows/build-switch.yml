@@ -103,6 +103,7 @@ jobs:
           # Build re3-specific shaders
           if [ -f "shaders/Makefile" ]; then
             cd shaders
+            mkdir -p obj
             make -j$(nproc)
             cd ..
           fi
