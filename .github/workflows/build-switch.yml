@@ -35,14 +35,15 @@ jobs:
         run: |
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/include/AL"
           ls -la "${GITHUB_WORKSPACE}/switch-prefix/lib" | grep -i openal
-      
+            
       - name: Generate shader includes
         run: |
-          cmake -S . -B build
-          cmake --build build --target shaders
+          cmake -S . -B build-host
+          cmake --build build-host --target shaders
+      
       - name: "Build files"
         run: |
-          /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build \
+          /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
             -DCMAKE_TOOLCHAIN_FILE=/opt/devkitpro/cmake/Switch.cmake \
             -DCMAKE_BUILD_TYPE=Release \
             -DRE3_AUDIO=OAL \
@@ -50,16 +51,17 @@ jobs:
             -DLIBRW_GL3_GFXLIB=GLFW \
             -DRE3_WITH_OPUS=False \
             -DRE3_VENDORED_LIBRW=True \
-            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix" \
-            -DOpenAL_DIR="${GITHUB_WORKSPACE}/switch-prefix/lib/cmake/OpenAL" \
-            -DOPENAL_ROOT="${GITHUB_WORKSPACE}/switch-prefix"
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix"
+          cmake --build build-switch --parallel
+      
       - name: "Create binary package (cpack)"
-        working-directory: ./build
+        working-directory: ./build-switch
         run: |
           cpack
+      
       - name: "Archive binary package (github artifacts)"
         uses: actions/upload-artifact@v4
         with:
           name: "switch-gl3"
-          path: build/*.zip
+          path: build-switch/*.zip
           if-no-files-found: error
