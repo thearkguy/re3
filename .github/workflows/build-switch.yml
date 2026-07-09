@@ -42,8 +42,7 @@ jobs:
           cmake --build build --target shaders
             - name: "Build files"
               run: |
-          /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S. -Bbuild -DRE3_AUDIO=OAL -DLIBRW_PLATFORM=GL3 -DLIBRW_GL3_GFXLIB=GLFW -DRE3_WITH_OPUS=False -DRE3_VENDORED_LIBRW=True -DRE3_INSTALL=True
-          cmake --build build --parallel
+          /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S. -B build -DRE3_AUDIO=OAL -DLIBRW_PLATFORM=GL3 -DLIBRW_GL3_GFXLIB=GLFW -DRE3_WITH_OPUS=False -DRE3_VENDORED_LIBRW=True -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix" -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
       - name: "Create binary package (cpack)"
         working-directory: ./build
         run: |
