@@ -53,16 +53,11 @@ target_compile_definitions(${EXECUTABLE} PRIVATE CMAKE_BUILD)
 target_compile_definitions(${EXECUTABLE} PRIVATE USE_OUR_VERSIONING)
 
 if(${PROJECT}_AUDIO STREQUAL "OAL")
-    # Prefer config package from staged prefix (cross-compile friendly)
     find_package(OpenAL CONFIG QUIET)
-    if(NOT OpenAL_FOUND)
-        # Fallback to module mode
-        find_package(OpenAL REQUIRED)
-    endif()
-
-    if(TARGET OpenAL::OpenAL)
+    if(OpenAL_FOUND AND TARGET OpenAL::OpenAL)
         target_link_libraries(${EXECUTABLE} PRIVATE OpenAL::OpenAL)
     else()
+        find_package(OpenAL MODULE REQUIRED)
         target_include_directories(${EXECUTABLE} PRIVATE ${OPENAL_INCLUDE_DIR})
         target_link_libraries(${EXECUTABLE} PRIVATE ${OPENAL_LIBRARY})
         target_compile_definitions(${EXECUTABLE} PRIVATE ${OPENAL_DEFINITIONS})
