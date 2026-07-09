@@ -91,6 +91,9 @@ jobs:
           set -euxo pipefail
           mkdir -p shaders/obj
           
+          # Ensure all shader scripts are executable
+          chmod +x src/extras/shaders/*.sh 2>/dev/null || true
+          
           # Copy all generated librw shaders
           if ls vendor/librw/src/gl/shaders/*.inc 1> /dev/null 2>&1; then
             cp -f vendor/librw/src/gl/shaders/*.inc shaders/obj/
@@ -120,7 +123,7 @@ jobs:
           
           echo "All required shaders generated successfully:"
           ls -lh shaders/obj/*.inc
-        
+          
       - name: "Build files"
         run: |
           /opt/devkitpro/portlibs/switch/bin/aarch64-none-elf-cmake -S . -B build-switch \
