@@ -145,7 +145,7 @@ jobs:
       - name: "Create binary package (cpack)"
         working-directory: ./build-switch
         run: |
-          cpack
+          cpack -G ZIP
         
       - name: "Archive binary package (github artifacts)"
         uses: actions/upload-artifact@v4
