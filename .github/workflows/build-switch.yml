@@ -39,9 +39,10 @@ jobs:
       - name: Generate shader includes
         run: |
           cmake -S . -B build-host \
-            -DRE3_AUDIO=NONE \
-            -DRE3_WITH_OPUS=False \
-            -DRE3_WITH_LIBSNDFILE=False
+            -DRE3_AUDIO=OAL \
+            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
+            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a" \
+            -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix"
           cmake --build build-host --target shaders --parallel
             
       - name: "Build files"
