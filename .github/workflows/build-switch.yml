@@ -51,8 +51,8 @@ jobs:
             -DRE3_WITH_OPUS=False \
             -DRE3_VENDORED_LIBRW=True \
             -DCMAKE_PREFIX_PATH="${GITHUB_WORKSPACE}/switch-prefix" \
-            -DOPENAL_INCLUDE_DIR="${GITHUB_WORKSPACE}/switch-prefix/include" \
-            -DOPENAL_LIBRARY="${GITHUB_WORKSPACE}/switch-prefix/lib/libopenal.a"
+            -DOpenAL_DIR="${GITHUB_WORKSPACE}/switch-prefix/lib/cmake/OpenAL" \
+            -DOPENAL_ROOT="${GITHUB_WORKSPACE}/switch-prefix"
       - name: "Create binary package (cpack)"
         working-directory: ./build
         run: |
