@@ -100,16 +100,8 @@ int GetOptionCount(int screen)
 #define SETUP_SCROLLING(screen)
 #endif
 
-#ifdef TRIANGLE_BACK_BUTTON
-#define GetBackJustUp GetTriangleJustUp
-#define GetBackJustDown GetTriangleJustDown
-#elif defined(CIRCLE_BACK_BUTTON)
-#define GetBackJustUp GetCircleJustUp
-#define GetBackJustDown GetCircleJustDown
-#else
-#define GetBackJustUp GetSquareJustUp
-#define GetBackJustDown GetSquareJustDown
-#endif
+#define GetBackJustUp GetCrossJustUp
+#define GetBackJustDown GetCrossJustDown
 
 #ifdef MENU_MAP
 bool CMenuManager::bMenuMapActive = false;
@@ -4681,7 +4673,7 @@ CMenuManager::ProcessButtonPresses(void)
 	// Centralized enter/back (except some conditions)
 #ifdef TIDY_UP_PBP
 	if (aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_Action != MENUACTION_RESUME) {
-		if (CPad::GetPad(0)->GetEnterJustDown() || CPad::GetPad(0)->GetCrossJustDown() ||
+		if (CPad::GetPad(0)->GetEnterJustDown() || CPad::GetPad(0)->GetCircleJustDown() ||
 			(isPlainTextScreen(m_nCurrScreen) && CPad::GetPad(0)->GetLeftMouseJustDown())) {
 
 			if (!isPlainTextScreen(m_nCurrScreen))
@@ -4690,7 +4682,7 @@ CMenuManager::ProcessButtonPresses(void)
 			optionSelected = true;
 		}
 	} else {
-		if (CPad::GetPad(0)->GetEnterJustUp() || CPad::GetPad(0)->GetCrossJustUp()) {
+		if (CPad::GetPad(0)->GetEnterJustUp() || CPad::GetPad(0)->GetCircleJustUp()) {
 			m_bShowMouse = false;
 			optionSelected = true;
 		}
@@ -6464,7 +6456,7 @@ CMenuManager::PrintMap(void)
 
 	// Adding marker
 	if (m_nMenuFadeAlpha >= 255) {
-		if (CPad::GetPad(0)->GetRightMouseJustDown() || CPad::GetPad(0)->GetCrossJustDown()) {
+		if (CPad::GetPad(0)->GetRightMouseJustDown() || CPad::GetPad(0)->GetCircleJustDown()) {
 			if (mapCrosshair.y > fMapCenterY - fMapSize && mapCrosshair.y < fMapCenterY + fMapSize &&
 				mapCrosshair.x > fMapCenterX - fMapSize && mapCrosshair.x < fMapCenterX + fMapSize) {
 
