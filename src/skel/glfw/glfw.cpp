@@ -332,6 +332,8 @@ static HidVibrationValue SwitchVibrationValues[2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceHandles[2][2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceGC;
 
+static HidSixAxisSensorHandle SwitchSixAxisHandles[2];
+
 static PadState SwitchPad;
 
 static Result HidInitializationResult[2];
@@ -339,6 +341,12 @@ static Result HidInitializationGCResult;
 
 static void _psInitializeVibration()
 {
+	hidGetSixAxisSensorHandles(&SwitchSixAxisHandles[0], 1, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
+	hidStartSixAxisSensor(SwitchSixAxisHandles[0]);
+
+	hidGetSixAxisSensorHandles(&SwitchSixAxisHandles[1], 1, HidNpadIdType_No1, HidNpadStyleSet_NpadFullCtrl);
+	hidStartSixAxisSensor(SwitchSixAxisHandles[1]);
+
 	HidInitializationResult[0] = hidInitializeVibrationDevices(SwitchVibrationDeviceHandles[0], 2, HidNpadIdType_Handheld, HidNpadStyleTag_NpadHandheld);
 	if(R_FAILED(HidInitializationResult[0])) {
 		printf("Failed to initialize VibrationDevice for Handheld Mode\n");
@@ -2531,6 +2539,20 @@ void CapturePad(RwInt32 padID)
 
 		if ( Abs(rightStickPos.y) > 0.3f )
 			pad->PCTempJoyState.RightStickY = (int32)(rightStickPos.y * 128.0f);
+
+#ifdef __SWITCH__
+		uint8 target_device = padIsHandheld(&SwitchPad) ? 0 : 1;
+		HidSixAxisSensorState sixaxis;
+		hidGetSixAxisSensorStates(SwitchSixAxisHandles[target_device], &sixaxis, 1);
+		
+		// Map angular velocity to GyroX and GyroY
+		pad->PCTempJoyState.GyroY = (int32)(sixaxis.angular_velocity.x * -1000.0f); // Pitch
+		pad->PCTempJoyState.GyroX = (int32)(sixaxis.angular_velocity.y * -1000.0f); // Yaw (inverted for logical aiming)
+#else
+		// TODO: PC gyro support (SDL2/Steam)
+		pad->PCTempJoyState.GyroX = 0;
+		pad->PCTempJoyState.GyroY = 0;
+#endif
 	}
 
 	_psHandleVibration();
