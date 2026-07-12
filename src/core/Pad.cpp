@@ -370,6 +370,7 @@ CControllerState::Clear(void)
 	Square = Triangle = Cross = Circle = 0;
 	LeftShock = RightShock = 0;
 	NetworkTalk = 0;
+	GyroX = GyroY = 0;
 }
 
 void CKeyboardState::Clear()
@@ -2736,17 +2737,19 @@ int16 CPad::SniperModeLookLeftRight(void)
 {
 	int16 axis = NewState.LeftStickX;
 	int16 dpad = (NewState.DPadRight - NewState.DPadLeft) / 2;
+	int16 gyro = NewState.GyroX;
 
 	if ( Abs(axis) > Abs(dpad) )
-		return axis;
+		return axis + gyro;
 	else
-		return dpad;
+		return dpad + gyro;
 }
 
 int16 CPad::SniperModeLookUpDown(void)
 {
 	int16 axis = NewState.LeftStickY;
 	int16 dpad;
+	int16 gyro = NewState.GyroY;
 #ifdef FIX_BUGS
 	axis = -axis;
 #endif
@@ -2762,29 +2765,31 @@ int16 CPad::SniperModeLookUpDown(void)
 #endif
 
 	if ( Abs(axis) > Abs(dpad) )
-		return axis;
+		return axis + gyro;
 	else
-		return dpad;
+		return dpad + gyro;
 }
 
 int16 CPad::LookAroundLeftRight(void)
 {
 	float axis = GetPad(0)->NewState.RightStickX;
+	int16 gyro = GetPad(0)->NewState.GyroX;
 
 	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
+		return gyro + (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
 							* (127.0f / 32.0f) ); // 3.96875f
 
 	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 10 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -10 : 10) )
+		return gyro + (int16) ( (axis + ( ( axis > 0 ) ? -10 : 10) )
 							* (127.0f / 64.0f) ); // 1.984375f
 
-	return 0;
+	return gyro;
 }
 
 int16 CPad::LookAroundUpDown(void)
 {
 	int16 axis = GetPad(0)->NewState.RightStickY;
+	int16 gyro = GetPad(0)->NewState.GyroY;
 
 #ifdef FIX_BUGS
 	axis = -axis;
@@ -2795,14 +2800,14 @@ int16 CPad::LookAroundUpDown(void)
 #endif
 
 	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
+		return gyro + (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
 							* (127.0f / 32.0f) ); // 3.96875f
 
 	else if ( TheCamera.Cams[0].Using3rdPersonMouseCam() && Abs(axis) > 40 )
-		return (int16) ( (axis + ( ( axis > 0 ) ? -40 : 40) )
+		return gyro + (int16) ( (axis + ( ( axis > 0 ) ? -40 : 40) )
 							* (127.0f / 64.0f) ); // 1.984375f
 
-	return 0;
+	return gyro;
 }
 
 
