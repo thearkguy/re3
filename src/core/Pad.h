@@ -25,6 +25,7 @@ public:
 	int16 Square, Triangle, Cross, Circle;
 	int16 LeftShock, RightShock;
 	int16 NetworkTalk;
+	int16 GyroX, GyroY;
 	float GetLeftStickX(void) { return LeftStickX/32767.0f; };
 	float GetLeftStickY(void) { return LeftStickY/32767.0f; };
 	float GetRightStickX(void) { return RightStickX/32767.0f; };
@@ -43,7 +44,7 @@ public:
 			LeftShock || RightShock;
 	}
 };
-VALIDATE_SIZE(CControllerState, 0x2A);
+VALIDATE_SIZE(CControllerState, 0x2E);
 
 class CMouseControllerState
 {
@@ -483,7 +484,6 @@ public:
 	static bool IsNoOrObsolete() { return bDisplayNoControllerMessage || bObsoleteControllerMessage; }
 };
 
-VALIDATE_SIZE(CPad, 0xFC);
 extern CPad Pads[MAX_PADS];
 
 #ifdef ALLCARSHELI_CHEAT
