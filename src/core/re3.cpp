@@ -489,6 +489,8 @@ bool LoadINISettings()
 	ReadIniIfExists("Controller", "InvertMouseVertically", &MousePointerStateHelper.bInvertVertically);
 	ReadIniIfExists("Controller", "DisableMouseSteering", &CVehicle::m_bDisableMouseSteering);
 	ReadIniIfExists("Controller", "Vibration", &FrontEndMenuManager.m_PrefsUseVibration);
+	ReadIniIfExists("Controller", "InvertGyroVertically", &CPad::bInvertGyroVertically);
+	ReadIniIfExists("Controller", "GyroSensitivity", &CPad::fGyroSensitivity);
 	ReadIniIfExists("Audio", "SfxVolume", &FrontEndMenuManager.m_PrefsSfxVolume);
 	ReadIniIfExists("Audio", "MusicVolume", &FrontEndMenuManager.m_PrefsMusicVolume);
 	ReadIniIfExists("Audio", "Radio", &FrontEndMenuManager.m_PrefsRadioStation);
@@ -591,6 +593,8 @@ void SaveINISettings()
 	StoreIni("Controller", "InvertMouseVertically", MousePointerStateHelper.bInvertVertically);
 	StoreIni("Controller", "DisableMouseSteering", CVehicle::m_bDisableMouseSteering);
 	StoreIni("Controller", "Vibration", FrontEndMenuManager.m_PrefsUseVibration);
+	StoreIni("Controller", "InvertGyroVertically", CPad::bInvertGyroVertically);
+	StoreIni("Controller", "GyroSensitivity", CPad::fGyroSensitivity);
 	StoreIni("Audio", "SfxVolume", FrontEndMenuManager.m_PrefsSfxVolume);
 	StoreIni("Audio", "MusicVolume", FrontEndMenuManager.m_PrefsMusicVolume);
 	StoreIni("Audio", "Radio", FrontEndMenuManager.m_PrefsRadioStation);

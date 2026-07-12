@@ -57,6 +57,8 @@ bool CPad::m_bMapPadOneToPadTwo;
 #ifdef INVERT_LOOK_FOR_PAD
 bool CPad::bInvertLook4Pad;
 #endif
+int8 CPad::bInvertGyroVertically = false;
+float CPad::fGyroSensitivity = 1.0f;
 #ifdef GTA_PS2
 unsigned char act_direct[6];
 unsigned char act_align[6];
@@ -2813,7 +2815,7 @@ int16 CPad::SniperModeLookLeftRight(void)
 {
 	int16 axis = NewState.LeftStickX;
 	int16 dpad = (NewState.DPadRight - NewState.DPadLeft) / 2;
-	int16 gyro = NewState.GyroX;
+	int16 gyro = (int16)(NewState.GyroX * CPad::fGyroSensitivity);
 
 	if ( Abs(axis) > Abs(dpad) )
 		return axis + gyro;
@@ -2825,7 +2827,9 @@ int16 CPad::SniperModeLookUpDown(void)
 {
 	int16 axis = NewState.LeftStickY;
 	int16 dpad;
-	int16 gyro = NewState.GyroY;
+	int16 gyro = (int16)(NewState.GyroY * CPad::fGyroSensitivity);
+	if (CPad::bInvertGyroVertically)
+		gyro = -gyro;
 #ifdef FIX_BUGS
 	axis = -axis;
 #endif
@@ -2849,7 +2853,7 @@ int16 CPad::SniperModeLookUpDown(void)
 int16 CPad::LookAroundLeftRight(void)
 {
 	float axis = GetPad(0)->NewState.RightStickX;
-	int16 gyro = GetPad(0)->NewState.GyroX;
+	int16 gyro = (int16)(GetPad(0)->NewState.GyroX * CPad::fGyroSensitivity);
 
 	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
 		return gyro + (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
@@ -2865,7 +2869,9 @@ int16 CPad::LookAroundLeftRight(void)
 int16 CPad::LookAroundUpDown(void)
 {
 	int16 axis = GetPad(0)->NewState.RightStickY;
-	int16 gyro = GetPad(0)->NewState.GyroY;
+	int16 gyro = (int16)(GetPad(0)->NewState.GyroY * CPad::fGyroSensitivity);
+	if (CPad::bInvertGyroVertically)
+		gyro = -gyro;
 
 #ifdef FIX_BUGS
 	axis = -axis;

@@ -187,6 +187,8 @@ public:
 #ifdef INVERT_LOOK_FOR_PAD
 	static bool bInvertLook4Pad;
 #endif
+	static int8 bInvertGyroVertically;
+	static float fGyroSensitivity;
 	
 #ifdef GTA_PC_CONTROLS
 	static CKeyboardState OldKeyState;

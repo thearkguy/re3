@@ -1,4 +1,4 @@
-﻿{
+{
     New strings are at the bottom of file.
     Do not change the order of strings.
     You can fix the typos of existing translation but please refrain from
@@ -8187,6 +8187,12 @@ PED DENSITY
 
 [FEM_CAR]
 CAR DENSITY
+
+[FEC_GIV]
+GYRO VERTIKAL UMKEHREN
+
+[FEC_GSE]
+GYRO-EMPFINDLICHKEIT
 
 [DUMMY]
 THIS LABEL NEEDS TO BE HERE !!!

@@ -1,4 +1,4 @@
-﻿{
+{
     New strings are at the bottom of file.
     Do not change the order of strings.
     You can fix the typos of existing translation but please refrain from
@@ -8112,6 +8112,12 @@ PED DENSITY
 CAR DENSITY
 
 { end of file }
+
+[FEC_GIV]
+ИНВЕРСИЯ ГИРОСКОПА
+
+[FEC_GSE]
+ЧУВСТВИТ. ГИРОСКОПА
 
 [DUMMY]
 THIS LABEL NEEDS TO BE HERE !!!
