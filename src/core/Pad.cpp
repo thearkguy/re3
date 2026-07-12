@@ -690,6 +690,9 @@ CControllerState CPad::ReconcileTwoControllersInput(CControllerState const &Stat
 	_FIX_RECON_DIR(DPadUp, DPadDown, LeftStickY);
 	_FIX_RECON_DIR(DPadLeft, DPadRight, LeftStickX);
 
+	_RECONCILE_AXIS(GyroX);
+	_RECONCILE_AXIS(GyroY);
+
 	return ReconState;
 
 #undef _RECONCILE_BUTTON
