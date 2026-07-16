@@ -2853,7 +2853,17 @@ int16 CPad::SniperModeLookUpDown(void)
 int16 CPad::LookAroundLeftRight(void)
 {
 	float axis = GetPad(0)->NewState.RightStickX;
-	int16 gyro = (int16)(GetPad(0)->NewState.GyroX * CPad::fGyroSensitivity);
+	int16 gyro = 0;
+	int16 camMode = TheCamera.Cams[TheCamera.ActiveCam].Mode;
+	if (camMode == CCam::MODE_SNIPER ||
+		camMode == CCam::MODE_SNIPER_RUNABOUT ||
+		camMode == CCam::MODE_ROCKETLAUNCHER ||
+		camMode == CCam::MODE_ROCKETLAUNCHER_RUNABOUT ||
+		camMode == CCam::MODE_M16_1STPERSON ||
+		camMode == CCam::MODE_M16_1STPERSON_RUNABOUT ||
+		camMode == CCam::MODE_HELICANNON_1STPERSON) {
+		gyro = (int16)(GetPad(0)->NewState.GyroX * CPad::fGyroSensitivity);
+	}
 
 	if ( Abs(axis) > 85 && !GetLookBehindForPed() )
 		return gyro + (int16) ( (axis + ( ( axis > 0 ) ? -85 : 85) )
@@ -2869,9 +2879,19 @@ int16 CPad::LookAroundLeftRight(void)
 int16 CPad::LookAroundUpDown(void)
 {
 	int16 axis = GetPad(0)->NewState.RightStickY;
-	int16 gyro = (int16)(GetPad(0)->NewState.GyroY * CPad::fGyroSensitivity);
-	if (CPad::bInvertGyroVertically)
-		gyro = -gyro;
+	int16 gyro = 0;
+	int16 camMode = TheCamera.Cams[TheCamera.ActiveCam].Mode;
+	if (camMode == CCam::MODE_SNIPER ||
+		camMode == CCam::MODE_SNIPER_RUNABOUT ||
+		camMode == CCam::MODE_ROCKETLAUNCHER ||
+		camMode == CCam::MODE_ROCKETLAUNCHER_RUNABOUT ||
+		camMode == CCam::MODE_M16_1STPERSON ||
+		camMode == CCam::MODE_M16_1STPERSON_RUNABOUT ||
+		camMode == CCam::MODE_HELICANNON_1STPERSON) {
+		gyro = (int16)(GetPad(0)->NewState.GyroY * CPad::fGyroSensitivity);
+		if (CPad::bInvertGyroVertically)
+			gyro = -gyro;
+	}
 
 #ifdef FIX_BUGS
 	axis = -axis;
