@@ -333,6 +333,7 @@ static HidVibrationDeviceHandle SwitchVibrationDeviceHandles[2][2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceGC;
 
 static u32 SwitchActiveStyle = 0;
+static HidNpadIdType SwitchActiveNpadId = (HidNpadIdType)-1;
 static HidSixAxisSensorHandle SwitchActiveSixAxisHandles[2];
 static int SwitchActiveSixAxisCount = 0;
 
@@ -368,7 +369,11 @@ static void _psHandleVibration()
 {
 	padUpdate(&SwitchPad);
 
-	uint8 target_device = padIsHandheld(&SwitchPad) ? 0 : 1;
+	uint8 target_device = 1;
+	if (SwitchActiveNpadId == HidNpadIdType_Handheld)
+		target_device = 0;
+	else if (SwitchActiveNpadId == (HidNpadIdType)-1)
+		target_device = padIsHandheld(&SwitchPad) ? 0 : 1;
 
 	if(R_SUCCEEDED(HidInitializationResult[target_device])) {
 		CPad* pad = CPad::GetPad(0);
@@ -2538,16 +2543,28 @@ void CapturePad(RwInt32 padID)
 			pad->PCTempJoyState.RightStickY = (int32)(rightStickPos.y * 128.0f);
 
 #ifdef __SWITCH__
-		u32 style = padGetStyleSet(&SwitchPad);
-		if (style != SwitchActiveStyle) {
+		HidNpadIdType id = HidNpadIdType_No1;
+		if (glfwPad == 8) {
+			id = HidNpadIdType_Handheld;
+		} else if (glfwPad >= 0 && glfwPad < 8) {
+			id = (HidNpadIdType)glfwPad;
+		} else {
+			const char* name = glfwGetJoystickName(glfwPad);
+			if (name && strcmp(name, "Handheld") == 0) {
+				id = HidNpadIdType_Handheld;
+			}
+		}
+
+		u32 style = hidGetNpadStyleSet(id);
+		if (style != SwitchActiveStyle || id != SwitchActiveNpadId) {
 			for (int i = 0; i < SwitchActiveSixAxisCount; i++) {
 				hidStopSixAxisSensor(SwitchActiveSixAxisHandles[i]);
 			}
 			SwitchActiveSixAxisCount = 0;
 			SwitchActiveStyle = style;
+			SwitchActiveNpadId = id;
 
 			if (style != 0) {
-				HidNpadIdType id = (style & HidNpadStyleTag_NpadHandheld) ? HidNpadIdType_Handheld : HidNpadIdType_No1;
 				HidNpadStyleTag tag = HidNpadStyleTag_NpadFullKey;
 				int handlesToGet = 1;
 
