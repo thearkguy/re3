@@ -274,6 +274,7 @@ public:
 	int16 SniperModeLookUpDown(void);
 	int16 LookAroundLeftRight(void);
 	int16 LookAroundUpDown(void);
+	static bool IsAimingCameraMode(int16 camMode);
 	void ResetAverageWeapon(void);
 	static void PrintErrorMessage(void);
 	static void ResetCheats(void);

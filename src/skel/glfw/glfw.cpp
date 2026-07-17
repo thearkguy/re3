@@ -332,10 +332,10 @@ static HidVibrationValue SwitchVibrationValues[2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceHandles[2][2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceGC;
 
-static u32 SwitchActiveStyle = 0;
-static HidNpadIdType SwitchActiveNpadId = (HidNpadIdType)-1;
-static HidSixAxisSensorHandle SwitchActiveSixAxisHandles[2];
-static int SwitchActiveSixAxisCount = 0;
+static u32 SwitchActiveStyle[2] = {0};
+static HidNpadIdType SwitchActiveNpadId[2] = { (HidNpadIdType)-1, (HidNpadIdType)-1 };
+static HidSixAxisSensorHandle SwitchActiveSixAxisHandles[2][2];
+static int SwitchActiveSixAxisCount[2] = {0};
 
 static PadState SwitchPad;
 
@@ -370,9 +370,9 @@ static void _psHandleVibration()
 	padUpdate(&SwitchPad);
 
 	uint8 target_device = 1;
-	if (SwitchActiveNpadId == HidNpadIdType_Handheld)
+	if (SwitchActiveNpadId[0] == HidNpadIdType_Handheld)
 		target_device = 0;
-	else if (SwitchActiveNpadId == (HidNpadIdType)-1)
+	else if (SwitchActiveNpadId[0] == (HidNpadIdType)-1)
 		target_device = padIsHandheld(&SwitchPad) ? 0 : 1;
 
 	if(R_SUCCEEDED(HidInitializationResult[target_device])) {
@@ -2542,6 +2542,45 @@ void CapturePad(RwInt32 padID)
 		if ( Abs(rightStickPos.y) > 0.3f )
 			pad->PCTempJoyState.RightStickY = (int32)(rightStickPos.y * 128.0f);
 
+		if ( ControlsManager.m_NewState.isGamepad ) {
+			pad->PCTempJoyState.Circle = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_B] ? 255 : 0;
+			pad->PCTempJoyState.Cross = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_A] ? 255 : 0;
+			pad->PCTempJoyState.Square = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_X] ? 255 : 0;
+			pad->PCTempJoyState.Triangle = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_Y] ? 255 : 0;
+			pad->PCTempJoyState.LeftShoulder1 = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] ? 255 : 0;
+			pad->PCTempJoyState.RightShoulder1 = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] ? 255 : 0;
+			pad->PCTempJoyState.LeftShoulder2 = ControlsManager.m_NewState.mappedButtons[15] ? 255 : 0;
+			pad->PCTempJoyState.RightShoulder2 = ControlsManager.m_NewState.mappedButtons[16] ? 255 : 0;
+			pad->PCTempJoyState.Select = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_BACK] ? 255 : 0;
+			pad->PCTempJoyState.Start = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_START] ? 255 : 0;
+			pad->PCTempJoyState.LeftShock = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_LEFT_THUMB] ? 255 : 0;
+			pad->PCTempJoyState.RightShock = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_RIGHT_THUMB] ? 255 : 0;
+			pad->PCTempJoyState.DPadUp = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_DPAD_UP] ? 255 : 0;
+			pad->PCTempJoyState.DPadRight = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] ? 255 : 0;
+			pad->PCTempJoyState.DPadDown = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] ? 255 : 0;
+			pad->PCTempJoyState.DPadLeft = ControlsManager.m_NewState.mappedButtons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] ? 255 : 0;
+		} else {
+			auto CheckRawButton = [&](int32 index) -> int16 {
+				return (index >= 0 && index < numButtons && buttons[index]) ? 255 : 0;
+			};
+			pad->PCTempJoyState.Circle = CheckRawButton(0);
+			pad->PCTempJoyState.Cross = CheckRawButton(1);
+			pad->PCTempJoyState.Square = CheckRawButton(2);
+			pad->PCTempJoyState.Triangle = CheckRawButton(3);
+			pad->PCTempJoyState.LeftShoulder2 = CheckRawButton(4);
+			pad->PCTempJoyState.RightShoulder2 = CheckRawButton(5);
+			pad->PCTempJoyState.LeftShoulder1 = CheckRawButton(6);
+			pad->PCTempJoyState.RightShoulder1 = CheckRawButton(7);
+			pad->PCTempJoyState.Select = CheckRawButton(8);
+			pad->PCTempJoyState.LeftShock = CheckRawButton(9);
+			pad->PCTempJoyState.RightShock = CheckRawButton(10);
+			pad->PCTempJoyState.Start = CheckRawButton(11);
+			pad->PCTempJoyState.DPadUp = CheckRawButton(12);
+			pad->PCTempJoyState.DPadRight = CheckRawButton(13);
+			pad->PCTempJoyState.DPadDown = CheckRawButton(14);
+			pad->PCTempJoyState.DPadLeft = CheckRawButton(15);
+		}
+
 #ifdef __SWITCH__
 		HidNpadIdType id = HidNpadIdType_No1;
 		if (glfwPad == 8) {
@@ -2556,13 +2595,13 @@ void CapturePad(RwInt32 padID)
 		}
 
 		u32 style = hidGetNpadStyleSet(id);
-		if (style != SwitchActiveStyle || id != SwitchActiveNpadId) {
-			for (int i = 0; i < SwitchActiveSixAxisCount; i++) {
-				hidStopSixAxisSensor(SwitchActiveSixAxisHandles[i]);
+		if (style != SwitchActiveStyle[padID] || id != SwitchActiveNpadId[padID]) {
+			for (int i = 0; i < SwitchActiveSixAxisCount[padID]; i++) {
+				hidStopSixAxisSensor(SwitchActiveSixAxisHandles[padID][i]);
 			}
-			SwitchActiveSixAxisCount = 0;
-			SwitchActiveStyle = style;
-			SwitchActiveNpadId = id;
+			SwitchActiveSixAxisCount[padID] = 0;
+			SwitchActiveStyle[padID] = style;
+			SwitchActiveNpadId[padID] = id;
 
 			if (style != 0) {
 				HidNpadStyleTag tag = HidNpadStyleTag_NpadFullKey;
@@ -2577,11 +2616,11 @@ void CapturePad(RwInt32 padID)
 					handlesToGet = 2;
 				}
 
-				Result rc = hidGetSixAxisSensorHandles(SwitchActiveSixAxisHandles, handlesToGet, id, tag);
+				Result rc = hidGetSixAxisSensorHandles(SwitchActiveSixAxisHandles[padID], handlesToGet, id, tag);
 				if (R_SUCCEEDED(rc)) {
-					SwitchActiveSixAxisCount = handlesToGet;
-					for (int i = 0; i < SwitchActiveSixAxisCount; i++) {
-						hidStartSixAxisSensor(SwitchActiveSixAxisHandles[i]);
+					SwitchActiveSixAxisCount[padID] = handlesToGet;
+					for (int i = 0; i < SwitchActiveSixAxisCount[padID]; i++) {
+						hidStartSixAxisSensor(SwitchActiveSixAxisHandles[padID][i]);
 					}
 				}
 			}
@@ -2589,9 +2628,9 @@ void CapturePad(RwInt32 padID)
 
 		HidSixAxisSensorState sixaxis;
 		memset(&sixaxis, 0, sizeof(sixaxis));
-		if (SwitchActiveSixAxisCount > 0) {
-			int handleIndex = (SwitchActiveSixAxisCount == 2) ? 1 : 0;
-			hidGetSixAxisSensorStates(SwitchActiveSixAxisHandles[handleIndex], &sixaxis, 1);
+		if (SwitchActiveSixAxisCount[padID] > 0) {
+			int handleIndex = (SwitchActiveSixAxisCount[padID] == 2) ? 1 : 0;
+			hidGetSixAxisSensorStates(SwitchActiveSixAxisHandles[padID][handleIndex], &sixaxis, 1);
 		}
 		
 		// Map angular velocity to GyroX and GyroY

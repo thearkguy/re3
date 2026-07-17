@@ -1528,78 +1528,6 @@ void CPad::DoCheats(void)
 void CPad::DoCheats(int16 unk)
 {
 #ifdef GTA_PS2_STUFF
-#ifdef GTA_PC_CONTROLS
-	auto GetJoyButtonJustDownLocal = [](int32 button) -> bool {
-		int32 mapId = -1;
-		switch (button) {
-			case 1: mapId = GLFW_GAMEPAD_BUTTON_B; break; // Circle
-			case 2: mapId = GLFW_GAMEPAD_BUTTON_A; break; // Cross
-			case 3: mapId = GLFW_GAMEPAD_BUTTON_X; break; // Square
-			case 4: mapId = GLFW_GAMEPAD_BUTTON_Y; break; // Triangle
-			case 7: mapId = GLFW_GAMEPAD_BUTTON_LEFT_BUMPER; break;
-			case 8: mapId = GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER; break;
-			case 9: mapId = GLFW_GAMEPAD_BUTTON_BACK; break;
-			case 10: mapId = GLFW_GAMEPAD_BUTTON_LEFT_THUMB; break;
-			case 11: mapId = GLFW_GAMEPAD_BUTTON_RIGHT_THUMB; break;
-			case 12: mapId = GLFW_GAMEPAD_BUTTON_START; break;
-			case 13: mapId = GLFW_GAMEPAD_BUTTON_DPAD_UP; break;
-			case 14: mapId = GLFW_GAMEPAD_BUTTON_DPAD_RIGHT; break;
-			case 15: mapId = GLFW_GAMEPAD_BUTTON_DPAD_DOWN; break;
-			case 16: mapId = GLFW_GAMEPAD_BUTTON_DPAD_LEFT; break;
-			case 5: mapId = 15; break; // Left trigger
-			case 6: mapId = 16; break; // Right trigger
-			default: return false;
-		}
-
-		if (ControlsManager.m_NewState.isGamepad) {
-			if (mapId >= 0 && mapId < MAX_BUTTONS) {
-				return ControlsManager.m_NewState.mappedButtons[mapId] && !ControlsManager.m_OldState.mappedButtons[mapId];
-			}
-		} else {
-			int32 rawBtnIndex = button - 1;
-			if (rawBtnIndex >= 0 && rawBtnIndex < ControlsManager.m_NewState.numButtons) {
-				return ControlsManager.m_NewState.buttons[rawBtnIndex] && !ControlsManager.m_OldState.buttons[rawBtnIndex];
-			}
-		}
-		return false;
-	};
-
-	if ( GetTriangleJustDown() || GetJoyButtonJustDownLocal(4) )
-		AddToCheatString('T');
-
-	if ( GetCircleJustDown() || GetJoyButtonJustDownLocal(1) )
-		AddToCheatString('C');
-
-	if ( GetCrossJustDown() || GetJoyButtonJustDownLocal(2) )
-		AddToCheatString('X');
-
-	if ( GetSquareJustDown() || GetJoyButtonJustDownLocal(3) )
-		AddToCheatString('S');
-
-	if ( GetDPadUpJustDown() || GetJoyButtonJustDownLocal(13) )
-		AddToCheatString('U');
-
-	if ( GetDPadDownJustDown() || GetJoyButtonJustDownLocal(15) )
-		AddToCheatString('D');
-
-	if ( GetDPadLeftJustDown() || GetJoyButtonJustDownLocal(16) )
-		AddToCheatString('L');
-
-	if ( GetDPadRightJustDown() || GetJoyButtonJustDownLocal(14) )
-		AddToCheatString('R');
-
-	if ( GetLeftShoulder1JustDown() || GetJoyButtonJustDownLocal(7) )
-		AddToCheatString('1');
-
-	if ( GetLeftShoulder2JustDown() || GetJoyButtonJustDownLocal(5) )
-		AddToCheatString('2');
-
-	if ( GetRightShoulder1JustDown() || GetJoyButtonJustDownLocal(8) )
-		AddToCheatString('3');
-
-	if ( GetRightShoulder2JustDown() || GetJoyButtonJustDownLocal(6) )
-		AddToCheatString('4');
-#else
 	if ( GetTriangleJustDown() )
 		AddToCheatString('T');
 
@@ -1635,7 +1563,6 @@ void CPad::DoCheats(int16 unk)
 
 	if ( GetRightShoulder2JustDown() )
 		AddToCheatString('4');
-#endif
 #endif
 }
 
@@ -2850,18 +2777,23 @@ int16 CPad::SniperModeLookUpDown(void)
 		return dpad + gyro;
 }
 
+bool CPad::IsAimingCameraMode(int16 camMode)
+{
+	return camMode == CCam::MODE_SNIPER ||
+	       camMode == CCam::MODE_SNIPER_RUNABOUT ||
+	       camMode == CCam::MODE_ROCKETLAUNCHER ||
+	       camMode == CCam::MODE_ROCKETLAUNCHER_RUNABOUT ||
+	       camMode == CCam::MODE_M16_1STPERSON ||
+	       camMode == CCam::MODE_M16_1STPERSON_RUNABOUT ||
+	       camMode == CCam::MODE_HELICANNON_1STPERSON;
+}
+
 int16 CPad::LookAroundLeftRight(void)
 {
 	float axis = GetPad(0)->NewState.RightStickX;
 	int16 gyro = 0;
 	int16 camMode = TheCamera.Cams[TheCamera.ActiveCam].Mode;
-	if (camMode == CCam::MODE_SNIPER ||
-		camMode == CCam::MODE_SNIPER_RUNABOUT ||
-		camMode == CCam::MODE_ROCKETLAUNCHER ||
-		camMode == CCam::MODE_ROCKETLAUNCHER_RUNABOUT ||
-		camMode == CCam::MODE_M16_1STPERSON ||
-		camMode == CCam::MODE_M16_1STPERSON_RUNABOUT ||
-		camMode == CCam::MODE_HELICANNON_1STPERSON) {
+	if (IsAimingCameraMode(camMode)) {
 		gyro = (int16)(GetPad(0)->NewState.GyroX * CPad::fGyroSensitivity);
 	}
 
@@ -2881,13 +2813,7 @@ int16 CPad::LookAroundUpDown(void)
 	int16 axis = GetPad(0)->NewState.RightStickY;
 	int16 gyro = 0;
 	int16 camMode = TheCamera.Cams[TheCamera.ActiveCam].Mode;
-	if (camMode == CCam::MODE_SNIPER ||
-		camMode == CCam::MODE_SNIPER_RUNABOUT ||
-		camMode == CCam::MODE_ROCKETLAUNCHER ||
-		camMode == CCam::MODE_ROCKETLAUNCHER_RUNABOUT ||
-		camMode == CCam::MODE_M16_1STPERSON ||
-		camMode == CCam::MODE_M16_1STPERSON_RUNABOUT ||
-		camMode == CCam::MODE_HELICANNON_1STPERSON) {
+	if (IsAimingCameraMode(camMode)) {
 		gyro = (int16)(GetPad(0)->NewState.GyroY * CPad::fGyroSensitivity);
 		if (CPad::bInvertGyroVertically)
 			gyro = -gyro;
