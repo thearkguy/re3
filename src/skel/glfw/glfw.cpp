@@ -332,10 +332,10 @@ static HidVibrationValue SwitchVibrationValues[2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceHandles[2][2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceGC;
 
-static u32 SwitchActiveStyle[2] = {0};
 static HidNpadIdType SwitchActiveNpadId[2] = { (HidNpadIdType)-1, (HidNpadIdType)-1 };
-static HidSixAxisSensorHandle SwitchActiveSixAxisHandles[2][2];
-static int SwitchActiveSixAxisCount[2] = {0};
+static u32 SwitchControllerActiveStyle[9] = {0};
+static HidSixAxisSensorHandle SwitchControllerSixAxisHandles[9][2];
+static int SwitchControllerSixAxisCount[9] = {0};
 
 static PadState SwitchPad;
 
@@ -2582,60 +2582,71 @@ void CapturePad(RwInt32 padID)
 		}
 
 #ifdef __SWITCH__
-		HidNpadIdType id = HidNpadIdType_No1;
-		if (glfwPad == 8) {
-			id = HidNpadIdType_Handheld;
-		} else if (glfwPad >= 0 && glfwPad < 8) {
-			id = (HidNpadIdType)glfwPad;
-		} else {
-			const char* name = glfwGetJoystickName(glfwPad);
-			if (name && strcmp(name, "Handheld") == 0) {
-				id = HidNpadIdType_Handheld;
+		const HidNpadIdType npad_ids[] = {
+			HidNpadIdType_No1, HidNpadIdType_No2, HidNpadIdType_No3, HidNpadIdType_No4,
+			HidNpadIdType_No5, HidNpadIdType_No6, HidNpadIdType_No7, HidNpadIdType_No8,
+			HidNpadIdType_Handheld
+		};
+
+		float total_ang_vel_x = 0.0f;
+		float total_ang_vel_y = 0.0f;
+		HidNpadIdType active_id = (HidNpadIdType)-1;
+
+		for (int idx = 0; idx < 9; idx++) {
+			HidNpadIdType id = npad_ids[idx];
+			u32 style = hidGetNpadStyleSet(id);
+
+			if (style != 0 && active_id == (HidNpadIdType)-1) {
+				active_id = id;
 			}
-		}
 
-		u32 style = hidGetNpadStyleSet(id);
-		if (style != SwitchActiveStyle[padID] || id != SwitchActiveNpadId[padID]) {
-			for (int i = 0; i < SwitchActiveSixAxisCount[padID]; i++) {
-				hidStopSixAxisSensor(SwitchActiveSixAxisHandles[padID][i]);
-			}
-			SwitchActiveSixAxisCount[padID] = 0;
-			SwitchActiveStyle[padID] = style;
-			SwitchActiveNpadId[padID] = id;
-
-			if (style != 0) {
-				HidNpadStyleTag tag = HidNpadStyleTag_NpadFullKey;
-				int handlesToGet = 1;
-
-				if (style & HidNpadStyleTag_NpadHandheld) {
-					tag = HidNpadStyleTag_NpadHandheld;
-				} else if (style & HidNpadStyleTag_NpadFullKey) {
-					tag = HidNpadStyleTag_NpadFullKey;
-				} else if (style & HidNpadStyleTag_NpadJoyDual) {
-					tag = HidNpadStyleTag_NpadJoyDual;
-					handlesToGet = 2;
+			if (style != SwitchControllerActiveStyle[idx]) {
+				for (int i = 0; i < SwitchControllerSixAxisCount[idx]; i++) {
+					hidStopSixAxisSensor(SwitchControllerSixAxisHandles[idx][i]);
 				}
+				SwitchControllerSixAxisCount[idx] = 0;
+				SwitchControllerActiveStyle[idx] = style;
 
-				Result rc = hidGetSixAxisSensorHandles(SwitchActiveSixAxisHandles[padID], handlesToGet, id, tag);
-				if (R_SUCCEEDED(rc)) {
-					SwitchActiveSixAxisCount[padID] = handlesToGet;
-					for (int i = 0; i < SwitchActiveSixAxisCount[padID]; i++) {
-						hidStartSixAxisSensor(SwitchActiveSixAxisHandles[padID][i]);
+				if (style != 0) {
+					HidNpadStyleTag tag = HidNpadStyleTag_NpadFullKey;
+					int handlesToGet = 1;
+
+					if (style & HidNpadStyleTag_NpadHandheld) {
+						tag = HidNpadStyleTag_NpadHandheld;
+					} else if (style & HidNpadStyleTag_NpadFullKey) {
+						tag = HidNpadStyleTag_NpadFullKey;
+					} else if (style & HidNpadStyleTag_NpadJoyDual) {
+						tag = HidNpadStyleTag_NpadJoyDual;
+						handlesToGet = 2;
+					}
+
+					Result rc = hidGetSixAxisSensorHandles(SwitchControllerSixAxisHandles[idx], handlesToGet, id, tag);
+					if (R_SUCCEEDED(rc)) {
+						SwitchControllerSixAxisCount[idx] = handlesToGet;
+						for (int i = 0; i < SwitchControllerSixAxisCount[idx]; i++) {
+							hidStartSixAxisSensor(SwitchControllerSixAxisHandles[idx][i]);
+						}
 					}
 				}
 			}
+
+			if (SwitchControllerSixAxisCount[idx] > 0) {
+				HidSixAxisSensorState sixaxis;
+				memset(&sixaxis, 0, sizeof(sixaxis));
+				int handleIndex = (SwitchControllerSixAxisCount[idx] == 2) ? 1 : 0;
+				hidGetSixAxisSensorStates(SwitchControllerSixAxisHandles[idx][handleIndex], &sixaxis, 1);
+				total_ang_vel_x += sixaxis.angular_velocity.x;
+				total_ang_vel_y += sixaxis.angular_velocity.y;
+			}
 		}
 
-		HidSixAxisSensorState sixaxis;
-		memset(&sixaxis, 0, sizeof(sixaxis));
-		if (SwitchActiveSixAxisCount[padID] > 0) {
-			int handleIndex = (SwitchActiveSixAxisCount[padID] == 2) ? 1 : 0;
-			hidGetSixAxisSensorStates(SwitchActiveSixAxisHandles[padID][handleIndex], &sixaxis, 1);
+		if (active_id != (HidNpadIdType)-1) {
+			SwitchActiveNpadId[padID] = active_id;
 		}
-		
+
 		// Map angular velocity to GyroX and GyroY
-		pad->PCTempJoyState.GyroY = (int32)(sixaxis.angular_velocity.x * -1000.0f); // Pitch
-		pad->PCTempJoyState.GyroX = (int32)(sixaxis.angular_velocity.y * -1000.0f); // Yaw (inverted for logical aiming)
+		pad->PCTempJoyState.GyroY = (int32)(total_ang_vel_x * -1000.0f); // Pitch
+		pad->PCTempJoyState.GyroX = (int32)(total_ang_vel_y * -1000.0f); // Yaw (inverted for logical aiming)
 #else
 		// TODO: PC gyro support (SDL2/Steam)
 		pad->PCTempJoyState.GyroX = 0;
