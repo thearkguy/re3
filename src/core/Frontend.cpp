@@ -5823,11 +5823,23 @@ CMenuManager::WaitForUserCD()
 void
 CMenuManager::PrintController(void)
 {
+	int numOptions = 0;
+	for (int i = 0; i < NUM_MENUROWS; ++i) {
+		if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action == MENUACTION_NOTHING)
+			break;
+		if (aScreens[m_nCurrScreen].m_aEntries[i].m_Action != MENUACTION_LABEL && aScreens[m_nCurrScreen].m_aEntries[i].m_EntryName[0] != '\0') {
+			numOptions++;
+		}
+	}
+	float controllerPosY = 40.0f + numOptions * 20.0f;
+	if (controllerPosY < 160.0f)
+		controllerPosY = 160.0f;
+
 	const float scale = 0.9f;
 	const float CONTROLLER_SIZE_X = 235.2f;
 	const float CONTROLLER_SIZE_Y = 175.2f;
 	const float CONTROLLER_POS_X = (DEFAULT_SCREEN_WIDTH - CONTROLLER_SIZE_X) / 2.0f;
-	const float CONTROLLER_POS_Y = 160.0f;
+	const float CONTROLLER_POS_Y = controllerPosY;
 
 	float centerX = CONTROLLER_POS_X + CONTROLLER_SIZE_X / 2;
 	float centerY = CONTROLLER_POS_Y + CONTROLLER_SIZE_Y / 2;
