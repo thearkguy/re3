@@ -2145,20 +2145,6 @@ main(int argc, char *argv[])
 					LoadINIControllerSettings();
 				}
 
-				// Determine hardware target dimensions directly
-				int w = (currentMode == AppletOperationMode_Console) ? 1920 : 1280;
-				int h = (currentMode == AppletOperationMode_Console) ? 1080 : 720;
-
-				// Match new settings to RenderWare video mode list
-				int bestMode = FindBestVideoModeIndex(w, h, 32);
-				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
-				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
-				FrontEndMenuManager.m_nPrefsWidth = w;
-				FrontEndMenuManager.m_nPrefsHeight = h;
-
-				// Force camera viewport resize
-				resizeCB(PSGLOBAL(window), w, h);
-
 				// Apply non-graphics settings that aren't applied automatically
 				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
 				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
