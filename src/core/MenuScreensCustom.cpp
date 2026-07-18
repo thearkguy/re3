@@ -95,7 +95,7 @@
 	#define INVERT_PAD_SELECTOR
 #endif
 
-#ifdef GAMEPAD_MENU
+#if defined(GAMEPAD_MENU) && !defined(__SWITCH__)
 	#define SELECT_CONTROLLER_TYPE  MENUACTION_CFO_SELECT, "FEC_TYP", { new CCFOSelect((int8*)&CMenuManager::m_PrefsControllerType, "Controller", "Type", controllerTypes, ARRAY_SIZE(controllerTypes), false, ControllerTypeAfterChange) },
 #else
 	#define SELECT_CONTROLLER_TYPE

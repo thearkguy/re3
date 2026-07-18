@@ -974,10 +974,12 @@ CMenuManager::DisplayHelperText()
 	switch (m_nHelperTextMsgId) {
 		case 0:
 		{
-			int action = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_Action;
-			if (action != MENUACTION_CHANGEMENU && action != MENUACTION_KEYBOARDCTRLS && action != MENUACTION_RESTOREDEF) {
-				CFont::SetColor(CRGBA(255, 255, 255, 255));
-				CFont::PrintString(MENU_X_LEFT_ALIGNED(HELPER_TEXT_LEFT_MARGIN), SCREEN_SCALE_FROM_BOTTOM(HELPER_TEXT_BOTTOM_MARGIN), TheText.Get("FET_MIG"));
+			if (m_nCurrScreen != MENUPAGE_CONTROLLER_SETTINGS) {
+				int action = aScreens[m_nCurrScreen].m_aEntries[m_nCurrOption].m_Action;
+				if (action != MENUACTION_CHANGEMENU && action != MENUACTION_KEYBOARDCTRLS && action != MENUACTION_RESTOREDEF) {
+					CFont::SetColor(CRGBA(255, 255, 255, 255));
+					CFont::PrintString(MENU_X_LEFT_ALIGNED(HELPER_TEXT_LEFT_MARGIN), SCREEN_SCALE_FROM_BOTTOM(HELPER_TEXT_BOTTOM_MARGIN), TheText.Get("FET_MIG"));
+				}
 			}
 			break;
 		}
@@ -3676,6 +3678,10 @@ const char* controllerTypesPaths[] = {
 void
 CMenuManager::LoadController(int8 type)
 {
+#ifdef __SWITCH__
+	type = CONTROLLER_NINTENDO_SWITCH;
+	m_PrefsControllerType = CONTROLLER_NINTENDO_SWITCH;
+#endif
 	switch (type)
 	{
 	case CONTROLLER_DUALSHOCK2:
@@ -5831,9 +5837,13 @@ CMenuManager::PrintController(void)
 			numOptions++;
 		}
 	}
+#ifdef __SWITCH__
+	float controllerPosY = 160.0f;
+#else
 	float controllerPosY = 40.0f + numOptions * 20.0f;
 	if (controllerPosY < 160.0f)
 		controllerPosY = 160.0f;
+#endif
 
 	const float scale = 0.9f;
 	const float CONTROLLER_SIZE_X = 235.2f;
