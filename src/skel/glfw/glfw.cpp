@@ -2149,7 +2149,8 @@ main(int argc, char *argv[])
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
 
-				// 5. Resize camera raster and update HUD viewport to the new loaded settings
+				// 5. Resize window surface and camera raster to match new mode settings
+				glfwSetWindowSize(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
 				resizeCB(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
 
 				// 6. Apply non-graphics settings that aren't applied automatically
