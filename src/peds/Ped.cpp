@@ -4576,7 +4576,7 @@ CPed::PedSetInCarCB(CAnimBlendAssociation *animAssoc, void *arg)
 
 		if (!veh->bEngineOn) {
 			veh->bEngineOn = true;
-			DMAudio.PlayOneShot(ped->m_audioEntityId, SOUND_CAR_ENGINE_START, 1.0f);
+			DMAudio.PlayOneShot(veh->m_audioEntityId, SOUND_CAR_ENGINE_START, 1.0f);	// ZAdd: Changed "ped->m_audioEntityId" to "veh->m_audioEntityId". Makes engine sound work.
 		}
 		if (ped->m_objective == OBJECTIVE_ENTER_CAR_AS_DRIVER && ped->CharCreatedBy == RANDOM_CHAR
 			&& ped != FindPlayerPed() && ped->m_nPedType != PEDTYPE_EMERGENCY) {
