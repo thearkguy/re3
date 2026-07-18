@@ -2145,42 +2145,30 @@ main(int argc, char *argv[])
 					LoadINIControllerSettings();
 				}
 
-				// Apply the new resolution to the video mode and rendering pipeline
+				// Apply the new resolution to the rendering pipeline.
+				// Note: We use m_nPrefsWidth/Height directly rather than going through
+				// FindBestVideoModeIndex, because the video mode list is static from
+				// engine init and may not include modes for the new operation mode
+				// (e.g., started handheld = only 720p modes listed, no 1080p).
 				{
 					int newWidth = FrontEndMenuManager.m_nPrefsWidth;
 					int newHeight = FrontEndMenuManager.m_nPrefsHeight;
-					int newDepth = FrontEndMenuManager.m_nPrefsDepth;
-
-					// Find and set the best matching video mode
-					int bestMode = FindBestVideoModeIndex(newWidth, newHeight, newDepth);
-					GcurSelVM = bestMode;
-					RwEngineSetVideoMode(GcurSelVM);
-
-					// Query actual mode dimensions
-					RwVideoMode vm;
-					RwEngineGetVideoModeInfo(&vm, GcurSelVM);
-
-					FrontEndMenuManager.m_nPrefsWidth = vm.width;
-					FrontEndMenuManager.m_nPrefsHeight = vm.height;
-					FrontEndMenuManager.m_nPrefsDepth = vm.depth;
-					FrontEndMenuManager.m_nDisplayVideoMode = GcurSelVM;
-					FrontEndMenuManager.m_nPrefsVideoMode = GcurSelVM;
 
 					// Update global resolution
-					RsGlobal.maximumWidth = vm.width;
-					RsGlobal.maximumHeight = vm.height;
-					RsGlobal.width = vm.width;
-					RsGlobal.height = vm.height;
+					RsGlobal.maximumWidth = newWidth;
+					RsGlobal.maximumHeight = newHeight;
+					RsGlobal.width = newWidth;
+					RsGlobal.height = newHeight;
 
-					// Resize the GLFW window
-					glfwSetWindowSize(PSGLOBAL(window), vm.width, vm.height);
+					// Resize the GLFW window to match the new display resolution
+					glfwSetWindowSize(PSGLOBAL(window), newWidth, newHeight);
 
 					// Rebuild camera rasters at the new resolution
 					RwRect r;
 					r.x = 0;
 					r.y = 0;
-					r.w = vm.width;
-					r.h = vm.height;
+					r.w = newWidth;
+					r.h = newHeight;
 					RsEventHandler(rsCAMERASIZE, &r);
 				}
 

@@ -506,8 +506,12 @@ bool LoadINISettings()
 		return false;
 
 #ifdef IMPROVED_VIDEOMODE
+#ifndef __SWITCH__
+	// On Switch, resolution is fixed per operation mode (set above), so don't
+	// let the INI override it.
 	ReadIniIfExists("VideoMode", "Width", &FrontEndMenuManager.m_nPrefsWidth);
 	ReadIniIfExists("VideoMode", "Height", &FrontEndMenuManager.m_nPrefsHeight);
+#endif
 	ReadIniIfExists("VideoMode", "Depth", &FrontEndMenuManager.m_nPrefsDepth);
 	ReadIniIfExists("VideoMode", "Subsystem", &FrontEndMenuManager.m_nPrefsSubsystem);
 	// Windowed mode is loaded below in CUSTOM_FRONTEND_OPTIONS section
