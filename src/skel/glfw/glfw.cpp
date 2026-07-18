@@ -330,6 +330,7 @@ psNativeTextureSupport(void)
 #ifdef __SWITCH__
 
 static AppletOperationMode lastSwitchOperationMode = AppletOperationMode_Handheld;
+extern AppletOperationMode g_ActiveSwitchOperationMode;
 
 int FindBestVideoModeIndex(int width, int height, int depth)
 {
@@ -2135,6 +2136,7 @@ main(int argc, char *argv[])
 
 				// 2. Update active mode
 				lastSwitchOperationMode = currentMode;
+				g_ActiveSwitchOperationMode = currentMode;
 
 				// 3. Load settings for the new mode
 				if (LoadINISettings()) {

@@ -184,10 +184,17 @@ CustomFrontendOptionsPopulate(void)
 #define MINI_CASE_SENSITIVE
 #include "ini.h"
 
+#ifdef __SWITCH__
+AppletOperationMode g_ActiveSwitchOperationMode = (AppletOperationMode)-1;
+#endif
+
 const char *GetINIPath()
 {
 #ifdef __SWITCH__
-	if (appletGetOperationMode() == AppletOperationMode_Console)
+	if (g_ActiveSwitchOperationMode == (AppletOperationMode)-1)
+		g_ActiveSwitchOperationMode = appletGetOperationMode();
+
+	if (g_ActiveSwitchOperationMode == AppletOperationMode_Console)
 		return "re3_docked.ini";
 	else
 		return "re3_handheld.ini";
@@ -485,7 +492,7 @@ bool LoadINISettings()
 #ifdef __SWITCH__
 	// Set Switch defaults prior to reading INI, so if the INI doesn't exist yet,
 	// it defaults to the appropriate mode's resolution.
-	if (appletGetOperationMode() == AppletOperationMode_Console) {
+	if (g_ActiveSwitchOperationMode == AppletOperationMode_Console) {
 		FrontEndMenuManager.m_nPrefsWidth = 1920;
 		FrontEndMenuManager.m_nPrefsHeight = 1080;
 	} else {
