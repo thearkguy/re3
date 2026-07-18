@@ -2129,14 +2129,7 @@ main(int argc, char *argv[])
 			glfwPollEvents();
 
 #ifdef __SWITCH__
-			// 1. Sync camera and RsGlobal to the physical EGL framebuffer size if it changed (e.g. on docking/undocking)
-			int fbWidth, fbHeight;
-			glfwGetFramebufferSize(PSGLOBAL(window), &fbWidth, &fbHeight);
-			if (fbWidth > 0 && fbHeight > 0 && (fbWidth != RsGlobal.maximumWidth || fbHeight != RsGlobal.maximumHeight)) {
-				resizeCB(PSGLOBAL(window), fbWidth, fbHeight);
-			}
-
-			// 2. Switch operation mode transition check
+			// Switch operation mode transition check
 			AppletOperationMode currentMode = appletGetOperationMode();
 			if (currentMode != lastSwitchOperationMode) {
 				// Save settings for the previous mode
@@ -2152,10 +2145,19 @@ main(int argc, char *argv[])
 					LoadINIControllerSettings();
 				}
 
+				// Determine hardware target dimensions directly
+				int w = (currentMode == AppletOperationMode_Console) ? 1920 : 1280;
+				int h = (currentMode == AppletOperationMode_Console) ? 1080 : 720;
+
 				// Match new settings to RenderWare video mode list
-				int bestMode = FindBestVideoModeIndex(FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight, 32);
+				int bestMode = FindBestVideoModeIndex(w, h, 32);
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
+				FrontEndMenuManager.m_nPrefsWidth = w;
+				FrontEndMenuManager.m_nPrefsHeight = h;
+
+				// Force camera viewport resize
+				resizeCB(PSGLOBAL(window), w, h);
 
 				// Apply non-graphics settings that aren't applied automatically
 				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
