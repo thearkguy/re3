@@ -2143,6 +2143,9 @@ main(int argc, char *argv[])
 				// Load settings for the new mode
 				if (LoadINISettings()) {
 					LoadINIControllerSettings();
+				} else {
+					SaveINISettings();
+					SaveINIControllerSettings();
 				}
 
 				// Apply the new resolution to the rendering pipeline.

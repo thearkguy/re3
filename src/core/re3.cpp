@@ -483,6 +483,13 @@ void SaveINIControllerSettings()
 #endif
 	StoreIni("Controller", "PadButtonsInited", ControlsManager.ms_padButtonsInited);
 
+#ifdef __SWITCH__
+	int32 width = (g_ActiveSwitchOperationMode == AppletOperationMode_Console) ? 1920 : 1280;
+	int32 height = (g_ActiveSwitchOperationMode == AppletOperationMode_Console) ? 1080 : 720;
+	StoreIni("VideoMode", "Width", width);
+	StoreIni("VideoMode", "Height", height);
+#endif
+
 	mINI::INIFile ini(GetINIPath());
 	ini.write(cfg);
 }
