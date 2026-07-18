@@ -52,6 +52,7 @@ long _dwOperatingSystemVersion;
 #include "Font.h"
 #include "MemoryMgr.h"
 #include "Renderer.h"
+#include "GenericGameStorage.h"
 
 // This is defined on project-level, via premake5 or cmake
 #ifdef GET_KEYBOARD_INPUT_FROM_X11
@@ -2148,14 +2149,18 @@ main(int argc, char *argv[])
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
 
-				// 5. Resize window and camera raster safely without terminating RenderWare
-				glfwSetWindowSize(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
-				resizeCB(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
+				// 5. If we are currently in gameplay, reload the scene with the new video mode
+				if (gGameState == GS_PLAYING_GAME) {
+					PcSaveHelper.SaveSlot(SLOT_COUNT);
+					PcSaveHelper.PopulateSlotInfo();
+					CheckDataNotCorrupt(SLOT_COUNT, LoadFileName);
 
-				// 6. Apply non-graphics settings that aren't applied automatically
-				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
-				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
-				DMAudio.SetMusicMasterVolume(FrontEndMenuManager.m_PrefsMusicVolume);
+					FrontEndMenuManager.m_bWantToRestart = true;
+					FrontEndMenuManager.m_bWantToLoad = true;
+				} else {
+					// In the menus, we can safely reinitialize RenderWare immediately
+					_psSelectScreenVM(bestMode);
+				}
 			}
 #endif
 
@@ -2435,6 +2440,12 @@ main(int argc, char *argv[])
 		if ( FrontEndMenuManager.m_bWantToLoad )
 		{
 			CGame::ShutDownForRestart();
+
+#ifdef __SWITCH__
+			// Re-initialize RenderWare to the new video mode before restarting
+			_psSelectScreenVM(FrontEndMenuManager.m_nPrefsVideoMode);
+#endif
+
 			CGame::InitialiseWhenRestarting();
 			DMAudio.ChangeMusicMode(MUSICMODE_GAME);
 			LoadSplash(GetLevelSplashScreen(CGame::currLevel));
