@@ -2129,26 +2129,35 @@ main(int argc, char *argv[])
 			glfwPollEvents();
 
 #ifdef __SWITCH__
+			// 1. Sync camera and RsGlobal to the physical EGL framebuffer size if it changed (e.g. on docking/undocking)
+			int fbWidth, fbHeight;
+			glfwGetFramebufferSize(PSGLOBAL(window), &fbWidth, &fbHeight);
+			if (fbWidth > 0 && fbHeight > 0 && (fbWidth != RsGlobal.maximumWidth || fbHeight != RsGlobal.maximumHeight)) {
+				resizeCB(PSGLOBAL(window), fbWidth, fbHeight);
+			}
+
+			// 2. Switch operation mode transition check
 			AppletOperationMode currentMode = appletGetOperationMode();
 			if (currentMode != lastSwitchOperationMode) {
-				// 1. Save settings for the previous mode
+				// Save settings for the previous mode
 				SaveINISettings();
 				SaveINIControllerSettings();
 
-				// 2. Update active mode
+				// Update active mode
 				lastSwitchOperationMode = currentMode;
 				g_ActiveSwitchOperationMode = currentMode;
 
-				// 3. Load settings for the new mode
+				// Load settings for the new mode
 				if (LoadINISettings()) {
 					LoadINIControllerSettings();
 				}
 
-				// 4. Match new settings to RenderWare video mode list
+				// Match new settings to RenderWare video mode list
 				int bestMode = FindBestVideoModeIndex(FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight, 32);
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
-				// 5. Apply non-graphics settings that aren't applied automatically
+
+				// Apply non-graphics settings that aren't applied automatically
 				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
 				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
 				DMAudio.SetMusicMasterVolume(FrontEndMenuManager.m_PrefsMusicVolume);
