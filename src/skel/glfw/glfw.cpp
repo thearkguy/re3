@@ -328,6 +328,31 @@ psNativeTextureSupport(void)
 
 #ifdef __SWITCH__
 
+static AppletOperationMode lastSwitchOperationMode = AppletOperationMode_Handheld;
+
+int FindBestVideoModeIndex(int width, int height, int depth)
+{
+	RwVideoMode vm;
+	int bestFsMode = -1;
+	int bestWidth = -1;
+	int bestHeight = -1;
+	int bestDepth = -1;
+	for (int i = 0; i < RwEngineGetNumVideoModes(); i++) {
+		RwEngineGetVideoModeInfo(&vm, i);
+		if (vm.flags & rwVIDEOMODEEXCLUSIVE) {
+			if (vm.width >= bestWidth && vm.width <= width &&
+				vm.height >= bestHeight && vm.height <= height &&
+				vm.depth >= bestDepth && vm.depth <= depth) {
+				bestWidth = vm.width;
+				bestHeight = vm.height;
+				bestDepth = vm.depth;
+				bestFsMode = i;
+			}
+		}
+	}
+	return (bestFsMode >= 0) ? bestFsMode : 0;
+}
+
 static HidVibrationValue SwitchVibrationValues[2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceHandles[2][2];
 static HidVibrationDeviceHandle SwitchVibrationDeviceGC;
@@ -2053,6 +2078,10 @@ main(int argc, char *argv[])
 	
 	initkeymap();
 
+#ifdef __SWITCH__
+	lastSwitchOperationMode = appletGetOperationMode();
+#endif
+
 	while ( TRUE )
 	{
 		RwInitialised = TRUE;
@@ -2095,6 +2124,30 @@ main(int argc, char *argv[])
 #endif
 		{
 			glfwPollEvents();
+
+#ifdef __SWITCH__
+			AppletOperationMode currentMode = appletGetOperationMode();
+			if (currentMode != lastSwitchOperationMode) {
+				// 1. Save settings for the previous mode
+				SaveINISettings();
+				SaveINIControllerSettings();
+
+				// 2. Update active mode
+				lastSwitchOperationMode = currentMode;
+
+				// 3. Load settings for the new mode
+				if (LoadINISettings()) {
+					LoadINIControllerSettings();
+				}
+
+				// 4. Find the best matching video mode and apply
+				int bestMode = FindBestVideoModeIndex(FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight, 32);
+				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
+				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
+				_psSelectScreenVM(bestMode);
+			}
+#endif
+
 #ifdef GET_KEYBOARD_INPUT_FROM_X11
 			checkKeyPresses();
 #endif

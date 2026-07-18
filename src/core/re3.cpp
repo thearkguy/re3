@@ -184,7 +184,17 @@ CustomFrontendOptionsPopulate(void)
 #define MINI_CASE_SENSITIVE
 #include "ini.h"
 
-mINI::INIFile ini("re3.ini");
+const char *GetINIPath()
+{
+#ifdef __SWITCH__
+	if (appletGetOperationMode() == AppletOperationMode_Docked)
+		return "re3_docked.ini";
+	else
+		return "re3_handheld.ini";
+#else
+	return "re3.ini";
+#endif
+}
 mINI::INIStructure cfg;
 
 bool ReadIniIfExists(const char *cat, const char *key, uint32 *out)
@@ -466,11 +476,25 @@ void SaveINIControllerSettings()
 #endif
 	StoreIni("Controller", "PadButtonsInited", ControlsManager.ms_padButtonsInited);
 
+	mINI::INIFile ini(GetINIPath());
 	ini.write(cfg);
 }
 
 bool LoadINISettings()
 {
+#ifdef __SWITCH__
+	// Set Switch defaults prior to reading INI, so if the INI doesn't exist yet,
+	// it defaults to the appropriate mode's resolution.
+	if (appletGetOperationMode() == AppletOperationMode_Docked) {
+		FrontEndMenuManager.m_nPrefsWidth = 1920;
+		FrontEndMenuManager.m_nPrefsHeight = 1080;
+	} else {
+		FrontEndMenuManager.m_nPrefsWidth = 1280;
+		FrontEndMenuManager.m_nPrefsHeight = 720;
+	}
+#endif
+
+	mINI::INIFile ini(GetINIPath());
 	if (!ini.read(cfg))
 		return false;
 
@@ -660,6 +684,7 @@ void SaveINISettings()
 	}
 #endif
 
+	mINI::INIFile ini(GetINIPath());
 	ini.write(cfg);
 }
 
