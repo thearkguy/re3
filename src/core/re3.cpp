@@ -187,7 +187,7 @@ CustomFrontendOptionsPopulate(void)
 const char *GetINIPath()
 {
 #ifdef __SWITCH__
-	if (appletGetOperationMode() == AppletOperationMode_Docked)
+	if (appletGetOperationMode() == AppletOperationMode_Console)
 		return "re3_docked.ini";
 	else
 		return "re3_handheld.ini";
@@ -485,7 +485,7 @@ bool LoadINISettings()
 #ifdef __SWITCH__
 	// Set Switch defaults prior to reading INI, so if the INI doesn't exist yet,
 	// it defaults to the appropriate mode's resolution.
-	if (appletGetOperationMode() == AppletOperationMode_Docked) {
+	if (appletGetOperationMode() == AppletOperationMode_Console) {
 		FrontEndMenuManager.m_nPrefsWidth = 1920;
 		FrontEndMenuManager.m_nPrefsHeight = 1080;
 	} else {
