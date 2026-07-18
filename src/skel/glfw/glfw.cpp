@@ -891,6 +891,9 @@ psSelectDevice()
 			}
 		}
 
+#ifdef __SWITCH__
+		bestFsMode = 0;
+#endif
 		if(bestFsMode < 0){
 			printf("WARNING: Cannot find desired video mode, selecting device cancelled\n");
 			return FALSE;
