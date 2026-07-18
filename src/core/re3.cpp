@@ -614,8 +614,15 @@ bool LoadINISettings()
 void SaveINISettings()
 {
 #ifdef IMPROVED_VIDEOMODE
+#ifdef __SWITCH__
+	int32 width = (g_ActiveSwitchOperationMode == AppletOperationMode_Console) ? 1920 : 1280;
+	int32 height = (g_ActiveSwitchOperationMode == AppletOperationMode_Console) ? 1080 : 720;
+	StoreIni("VideoMode", "Width", width);
+	StoreIni("VideoMode", "Height", height);
+#else
 	StoreIni("VideoMode", "Width", FrontEndMenuManager.m_nPrefsWidth);
 	StoreIni("VideoMode", "Height", FrontEndMenuManager.m_nPrefsHeight);
+#endif
 	StoreIni("VideoMode", "Depth", FrontEndMenuManager.m_nPrefsDepth);
 	StoreIni("VideoMode", "Subsystem", FrontEndMenuManager.m_nPrefsSubsystem);
 	// Windowed mode is loaded below in CUSTOM_FRONTEND_OPTIONS section
