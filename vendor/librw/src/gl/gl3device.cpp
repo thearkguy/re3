@@ -1243,7 +1243,10 @@ getFramebufferRect(Raster *frameBuffer)
 	Rect r;
 	Raster *fb = frameBuffer->parent;
 	if(fb->type == Raster::CAMERA){
-#ifdef LIBRW_SDL2
+#if defined __SWITCH__
+		r.w = fb->width;
+		r.h = fb->height;
+#elif defined LIBRW_SDL2
 		SDL_GetWindowSize(glGlobals.window, &r.w, &r.h);
 #else
 		glfwGetFramebufferSize(glGlobals.window, &r.w, &r.h);
