@@ -2148,12 +2148,7 @@ main(int argc, char *argv[])
 				int bestMode = FindBestVideoModeIndex(FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight, 32);
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
-
-				// 5. Resize window surface and camera raster to match new mode settings
-				glfwSetWindowSize(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
-				resizeCB(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
-
-				// 6. Apply non-graphics settings that aren't applied automatically
+				// 5. Apply non-graphics settings that aren't applied automatically
 				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
 				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
 				DMAudio.SetMusicMasterVolume(FrontEndMenuManager.m_PrefsMusicVolume);
