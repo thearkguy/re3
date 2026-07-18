@@ -51,6 +51,7 @@ long _dwOperatingSystemVersion;
 #include "AnimViewer.h"
 #include "Font.h"
 #include "MemoryMgr.h"
+#include "Renderer.h"
 
 // This is defined on project-level, via premake5 or cmake
 #ifdef GET_KEYBOARD_INPUT_FROM_X11
@@ -2140,11 +2141,19 @@ main(int argc, char *argv[])
 					LoadINIControllerSettings();
 				}
 
-				// 4. Find the best matching video mode and apply
+				// 4. Match new settings to RenderWare video mode list
 				int bestMode = FindBestVideoModeIndex(FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight, 32);
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
-				_psSelectScreenVM(bestMode);
+
+				// 5. Resize window and camera raster safely without terminating RenderWare
+				glfwSetWindowSize(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
+				resizeCB(PSGLOBAL(window), FrontEndMenuManager.m_nPrefsWidth, FrontEndMenuManager.m_nPrefsHeight);
+
+				// 6. Apply non-graphics settings that aren't applied automatically
+				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
+				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
+				DMAudio.SetMusicMasterVolume(FrontEndMenuManager.m_PrefsMusicVolume);
 			}
 #endif
 
