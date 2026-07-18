@@ -2149,18 +2149,10 @@ main(int argc, char *argv[])
 				FrontEndMenuManager.m_nPrefsVideoMode = bestMode;
 				FrontEndMenuManager.m_nDisplayVideoMode = bestMode;
 
-				// 5. If we are currently in gameplay, reload the scene with the new video mode
-				if (gGameState == GS_PLAYING_GAME) {
-					PcSaveHelper.SaveSlot(SLOT_COUNT);
-					PcSaveHelper.PopulateSlotInfo();
-					CheckDataNotCorrupt(SLOT_COUNT, LoadFileName);
-
-					FrontEndMenuManager.m_bWantToRestart = true;
-					FrontEndMenuManager.m_bWantToLoad = true;
-				} else {
-					// In the menus, we can safely reinitialize RenderWare immediately
-					_psSelectScreenVM(bestMode);
-				}
+				// 5. Apply non-graphics settings that aren't applied automatically
+				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
+				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
+				DMAudio.SetMusicMasterVolume(FrontEndMenuManager.m_PrefsMusicVolume);
 			}
 #endif
 
@@ -2440,12 +2432,6 @@ main(int argc, char *argv[])
 		if ( FrontEndMenuManager.m_bWantToLoad )
 		{
 			CGame::ShutDownForRestart();
-
-#ifdef __SWITCH__
-			// Re-initialize RenderWare to the new video mode before restarting
-			_psSelectScreenVM(FrontEndMenuManager.m_nPrefsVideoMode);
-#endif
-
 			CGame::InitialiseWhenRestarting();
 			DMAudio.ChangeMusicMode(MUSICMODE_GAME);
 			LoadSplash(GetLevelSplashScreen(CGame::currLevel));
