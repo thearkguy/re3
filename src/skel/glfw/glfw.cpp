@@ -2145,6 +2145,45 @@ main(int argc, char *argv[])
 					LoadINIControllerSettings();
 				}
 
+				// Apply the new resolution to the video mode and rendering pipeline
+				{
+					int newWidth = FrontEndMenuManager.m_nPrefsWidth;
+					int newHeight = FrontEndMenuManager.m_nPrefsHeight;
+					int newDepth = FrontEndMenuManager.m_nPrefsDepth;
+
+					// Find and set the best matching video mode
+					int bestMode = FindBestVideoModeIndex(newWidth, newHeight, newDepth);
+					GcurSelVM = bestMode;
+					RwEngineSetVideoMode(GcurSelVM);
+
+					// Query actual mode dimensions
+					RwVideoMode vm;
+					RwEngineGetVideoModeInfo(&vm, GcurSelVM);
+
+					FrontEndMenuManager.m_nPrefsWidth = vm.width;
+					FrontEndMenuManager.m_nPrefsHeight = vm.height;
+					FrontEndMenuManager.m_nPrefsDepth = vm.depth;
+					FrontEndMenuManager.m_nDisplayVideoMode = GcurSelVM;
+					FrontEndMenuManager.m_nPrefsVideoMode = GcurSelVM;
+
+					// Update global resolution
+					RsGlobal.maximumWidth = vm.width;
+					RsGlobal.maximumHeight = vm.height;
+					RsGlobal.width = vm.width;
+					RsGlobal.height = vm.height;
+
+					// Resize the GLFW window
+					glfwSetWindowSize(PSGLOBAL(window), vm.width, vm.height);
+
+					// Rebuild camera rasters at the new resolution
+					RwRect r;
+					r.x = 0;
+					r.y = 0;
+					r.w = vm.width;
+					r.h = vm.height;
+					RsEventHandler(rsCAMERASIZE, &r);
+				}
+
 				// Apply non-graphics settings that aren't applied automatically
 				CRenderer::ms_lodDistScale = FrontEndMenuManager.m_PrefsLOD;
 				DMAudio.SetEffectsMasterVolume(FrontEndMenuManager.m_PrefsSfxVolume);
